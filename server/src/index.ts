@@ -22,8 +22,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middleware - allow any localhost origin
-app.use(cors({ origin: true, credentials: true }));
+// Middleware - allow local development and Vercel production origin
+app.use(cors({ 
+  origin: [
+    'http://localhost:5173',
+    'https://rakta-run-repo.vercel.app'
+  ], 
+  credentials: true 
+}));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
