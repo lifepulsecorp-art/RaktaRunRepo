@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 const serviceAccountPath = path.join(__dirname, '../../firebase-service-account.json');
 const projectId = process.env.FIREBASE_PROJECT_ID?.trim();
 const clientEmail = process.env.FIREBASE_CLIENT_EMAIL?.trim();
-const privateKey: (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n')
+const privateKey: String(process.env.FIREBASE_PRIVATE_KEY).replace(/\\n/g, '\n')
 
 if (projectId && clientEmail && privateKey) {
   if (!admin.apps.length) {
