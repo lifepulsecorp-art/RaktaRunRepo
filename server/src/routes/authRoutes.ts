@@ -1,6 +1,6 @@
 import { createHmac, randomInt, timingSafeEqual } from 'crypto';
 import { Router } from 'express';
-import { compare, hash } from 'bcryptjs';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { authenticate, AuthenticatedRequest, JWT_SECRET } from '../middleware/auth.js';
@@ -81,7 +81,7 @@ router.post('/login', async (req, res) => {
   if (user.emailVerified === false) {
     return res.status(403).json({ error: 'Verify your email with the 6-digit code before signing in.' });
   }
-  if (user.passwordHash && !(await compare(password, user.passwordHash))) {
+  if (user.passwordHash && !(await bcrypt.compare(password, user.passwordHash))) {
     return res.status(401).json({ error: 'Email or password is incorrect.' });
   }
 
@@ -144,7 +144,7 @@ router.post('/register', async (req, res) => {
     email: normalizedEmail,
     name: String(displayName || name || normalizedEmail.split('@')[0]).trim().slice(0, 100),
     role: role as UserRole,
-    passwordHash: await hash(password, 12),
+    passwordHash: await bcrypt.hash(password, 10),
     codeHash: otpDigest(normalizedEmail, code),
     expiresAt: new Date(timestamp.getTime() + OTP_TTL_MS).toISOString(),
     resendAvailableAt: new Date(timestamp.getTime() + OTP_RESEND_DELAY_MS).toISOString(),
