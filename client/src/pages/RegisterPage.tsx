@@ -20,7 +20,7 @@ export default function RegisterPage() {
   }, [loading, firebaseUser, role, navigate]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-between p-6 transition-colors duration-200">
+    <div className="min-h-screen min-w-0 overflow-x-clip bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-between p-3 transition-colors duration-200 sm:p-6">
       {/* Top Header */}
       <div className="sticky top-0 z-30 -mx-6 px-6 py-2 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-xl">
         <div className="mx-auto w-full max-w-5xl flex items-center justify-between">
@@ -38,8 +38,8 @@ export default function RegisterPage() {
       </div>
 
       {/* Main Container */}
-      <div className="mx-auto w-full max-w-4xl py-10">
-        <div className="text-center mb-10 space-y-3">
+      <div className="mx-auto w-full max-w-4xl py-5 sm:py-10">
+        <div className="mb-6 space-y-3 text-center sm:mb-10">
           <div className="inline-flex items-center gap-2 rounded-full border border-rose-500/20 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 px-3.5 py-1 text-xs font-semibold text-rose-700 dark:text-rose-300">
             <ShieldCheck className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" />
             Coastal Karnataka Emergency Network
@@ -55,7 +55,7 @@ export default function RegisterPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Donor Card */}
           <Link to="/register/donor" className="group block focus:outline-none">
-            <Card className="h-full p-8 transition-all duration-200 hover:border-rose-500/60 hover:shadow-xl hover:shadow-rose-500/10 dark:hover:border-rose-500/60 dark:hover:shadow-rose-950/30 flex flex-col justify-between">
+            <Card className="h-full p-4 transition-all duration-200 hover:border-rose-500/60 hover:shadow-xl hover:shadow-rose-500/10 dark:hover:border-rose-500/60 dark:hover:shadow-rose-950/30 flex flex-col justify-between sm:p-8">
               <div>
                 <div className="flex items-center justify-between mb-5">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 group-hover:scale-105 transition-transform">
@@ -100,7 +100,7 @@ export default function RegisterPage() {
 
           {/* Hospital Card */}
           <Link to="/register/hospital" className="group block focus:outline-none">
-            <Card className="h-full p-8 transition-all duration-200 hover:border-emerald-500/60 hover:shadow-xl hover:shadow-emerald-500/10 dark:hover:border-emerald-500/60 dark:hover:shadow-emerald-950/30 flex flex-col justify-between">
+            <Card className="h-full p-4 transition-all duration-200 hover:border-emerald-500/60 hover:shadow-xl hover:shadow-emerald-500/10 dark:hover:border-emerald-500/60 dark:hover:shadow-emerald-950/30 flex flex-col justify-between sm:p-8">
               <div>
                 <div className="flex items-center justify-between mb-5">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 group-hover:scale-105 transition-transform">

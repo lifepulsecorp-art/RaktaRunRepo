@@ -81,6 +81,9 @@ router.post('/login', async (req, res) => {
   if (user.emailVerified === false) {
     return res.status(403).json({ error: 'Verify your email with the 6-digit code before signing in.' });
   }
+  if (user.role === 'admin' && !user.passwordHash) {
+    return res.status(401).json({ error: 'Admin password is not configured. Contact the system operator.' });
+  }
   if (user.passwordHash && !(await bcrypt.compare(password, user.passwordHash))) {
     return res.status(401).json({ error: 'Email or password is incorrect.' });
   }

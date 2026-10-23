@@ -1,14 +1,26 @@
 import 'dotenv/config';
+import bcrypt from 'bcryptjs';
 import { writeJson } from './db.js';
 import type { User, Hospital, Donor, BloodRequest, Match } from '../types.js';
+
+const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase() || 'admin@raktarun.in';
+const adminPassword = process.env.ADMIN_PASSWORD;
+if (!adminPassword) {
+  throw new Error('Set ADMIN_PASSWORD in the server environment before seeding the database.');
+}
+if (adminPassword.length < 12 || Buffer.byteLength(adminPassword, 'utf8') > 72) {
+  throw new Error('ADMIN_PASSWORD must be at least 12 characters and no more than 72 bytes.');
+}
+const adminPasswordHash = await bcrypt.hash(adminPassword, 10);
 
 // 1. Users (including Admin with provided UID)
 const users: User[] = [
   {
     uid: '5G6ajWegMiepIzvIyreG7bx82SG2',
-    email: 'admin@lifepulse.in',
+    email: adminEmail,
     role: 'admin',
     name: 'RaktaRun System Admin',
+    passwordHash: adminPasswordHash,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },

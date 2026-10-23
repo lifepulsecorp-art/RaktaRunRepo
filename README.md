@@ -104,6 +104,8 @@ SUPABASE_SECRET_KEY=your_supabase_secret_key
 SUPABASE_CERTIFICATES_BUCKET=donor-certificates
 JWT_SECRET=use_a_long_random_secret
 OTP_SECRET=use_a_different_long_random_secret
+ADMIN_EMAIL=admin@raktarun.in
+ADMIN_PASSWORD=set_the_admin_password_as_a_private_server_secret
 
 # Brevo Transactional Email & SMS Gateway
 BREVO_API_KEY=your_brevo_api_key_here
@@ -112,6 +114,8 @@ BREVO_SENDER_NAME=RaktaRun Emergency Network
 ```
 
 For Firebase Web settings, create `client/.env` from `client/.env.example`. Set Firebase Admin and Supabase server secrets in `server/.env`; never use a `VITE_` prefix for server secrets.
+
+To apply the configured admin email and password to the existing admin account, set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in the server environment, then run `npm run admin:rotate` from `server/`. The command updates only the admin account and stores the password as a bcrypt hash. Keep `ADMIN_PASSWORD` in the private server environment; do not put it in frontend code or public documentation.
 
 ### 4. Running the Application
 ```bash
@@ -136,7 +140,7 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for the Supabase schema, one-time JSON data m
 
 | Role | Email | Password | Access & Capabilities |
 | :--- | :--- | :--- | :--- |
-|  **System Admin** | `admin@lifepulse.in` | `AdminPulse@2026` / `LifePulse@123` | District telemetry, live rule configuration, audit logs & CSV export |
+|  **System Admin** | `admin@raktarun.in` | Set `ADMIN_PASSWORD` in the server environment; run `npm run admin:rotate` to securely update the existing admin account. | District telemetry, live rule configuration, audit logs & CSV export |
 |  **Hospital Staff** | `manipal@lifepulse.in` | `LifePulse@123` | Kasturba Hospital Manipal emergency blood requests & live tracking |
 |  **Hospital Staff** | `ajhospital@lifepulse.in` | `LifePulse@123` | AJ Hospital Mangaluru trauma dispatch & fulfillment logs |
 |  **Verified Donor** | `rahul.shetty@gmail.com` | `LifePulse@123` | O+ Screened Donor (7 donations, 5 emergency responses, Hero Studio) |

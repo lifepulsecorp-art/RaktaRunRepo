@@ -49,7 +49,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+    <div className="flex min-h-screen w-full min-w-0 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
       {/* Top Floating Controls */}
       <div className="absolute top-5 right-5 z-20 flex items-center gap-2">
         <ThemeToggle />
@@ -102,8 +102,8 @@ export const LoginPage: React.FC = () => {
       </div>
 
       {/* Right Column: Sign In Form */}
-      <div className="flex flex-1 items-center justify-center p-6 lg:p-12">
-        <div className="w-full max-w-md space-y-6">
+      <div className="flex min-w-0 flex-1 items-center justify-center p-4 sm:p-6 lg:p-12">
+        <div className="w-full max-w-md space-y-5 sm:space-y-6">
           <div className="text-center lg:text-left">
             <div className="lg:hidden flex justify-center mb-6">
               <RaktaRunLogo size="md" showSubtitle={true} />
@@ -135,7 +135,7 @@ export const LoginPage: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@lifepulse.in"
+                  placeholder="admin@raktarun.in"
                   className="w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900/80 py-2.5 pl-10 pr-4 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 transition shadow-sm"
                 />
               </div>

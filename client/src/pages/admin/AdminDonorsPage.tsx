@@ -161,14 +161,14 @@ export const AdminDonorsPage: React.FC = () => {
   });
 
   const headerActions = (
-    <div className="flex items-center gap-3">
+    <div className="flex w-full min-w-0 flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
       <Link
         to="/admin/hospitals"
-        className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition shadow-sm"
+        className="min-w-0 whitespace-normal rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition shadow-sm sm:whitespace-nowrap"
       >
         Go to Hospital Accreditation (Block F) →
       </Link>
-      <Badge variant="outline" className="border-emerald-300 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400">
+      <Badge variant="outline" className="w-fit border-emerald-300 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400">
         Live Audit Mode
       </Badge>
     </div>
@@ -181,25 +181,25 @@ export const AdminDonorsPage: React.FC = () => {
       actions={headerActions}
       withSidebar={true}
     >
-      <div className="space-y-6">
+      <div className="w-full min-w-0 space-y-5 sm:space-y-6">
         {message && (
           <div
-            className={`mb-6 rounded-xl border p-4 text-sm flex items-center justify-between ${
+            className={`mb-6 flex min-w-0 items-start justify-between gap-3 rounded-xl border p-3 text-sm sm:p-4 ${
               message.type === 'success'
                 ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300'
                 : 'border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300'
             }`}
           >
-            <span>{message.text}</span>
-            <button onClick={() => setMessage(null)} className="text-xs opacity-75 hover:opacity-100">
+            <span className="min-w-0 break-words">{message.text}</span>
+            <button onClick={() => setMessage(null)} className="shrink-0 text-xs opacity-75 hover:opacity-100">
               Dismiss
             </button>
           </div>
         )}
 
         {/* Filters and Controls */}
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative flex-1 max-w-md">
+        <div className="mb-5 flex w-full min-w-0 flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="relative w-full min-w-0 sm:max-w-md sm:flex-1">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
             <input
               type="text"
@@ -210,11 +210,11 @@ export const AdminDonorsPage: React.FC = () => {
             />
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="grid w-full min-w-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center sm:gap-3">
             <select
               value={filterBloodGroup}
               onChange={(e) => setFilterBloodGroup(e.target.value)}
-              className="rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 focus:border-rose-500 focus:outline-none shadow-sm"
+              className="w-full min-w-0 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-2 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 focus:border-rose-500 focus:outline-none shadow-sm sm:w-auto sm:px-3"
             >
               <option value="All">All Blood Groups</option>
               <option value="O+">O+</option>
@@ -230,7 +230,7 @@ export const AdminDonorsPage: React.FC = () => {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 focus:border-rose-500 focus:outline-none shadow-sm"
+              className="w-full min-w-0 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-2 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 focus:border-rose-500 focus:outline-none shadow-sm sm:w-auto sm:px-3"
             >
               <option value="All">All Statuses</option>
               <option value="pending">Pending Verification</option>
@@ -242,7 +242,7 @@ export const AdminDonorsPage: React.FC = () => {
             <button
               onClick={() => void fetchDonors()}
               disabled={loading}
-              className="flex items-center gap-1.5 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm"
+              className="col-span-2 flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm sm:col-span-1"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
               Refresh
@@ -251,7 +251,7 @@ export const AdminDonorsPage: React.FC = () => {
         </div>
 
         {/* Donors Table */}
-        <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm dark:shadow-xl backdrop-blur-md">
+        <div className="w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm dark:shadow-xl backdrop-blur-md">
           {loading && donors.length === 0 ? (
             <div className="p-12 text-center text-slate-500 dark:text-slate-400">
               <RefreshCw className="mx-auto h-8 w-8 animate-spin text-rose-500" />
@@ -263,7 +263,110 @@ export const AdminDonorsPage: React.FC = () => {
               <p className="mt-3 text-base font-semibold text-slate-800 dark:text-slate-300">No donor records matched</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            <div className="divide-y divide-slate-100 p-3 dark:divide-slate-800/60 md:hidden">
+              {filteredDonors.map((d) => {
+                const isEligible = d.eligibilityStatus === 'eligible';
+                const isUpdating = actionInProgress === d.id;
+                const aiReview = d.verification?.aiReview;
+
+                return (
+                  <article key={d.id} className="min-w-0 space-y-3 py-4 first:pt-1 last:pb-1">
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-start gap-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-sm font-black text-rose-600 dark:bg-rose-500/20 dark:text-rose-400">
+                          {d.bloodGroup}
+                        </span>
+                        <div className="min-w-0">
+                          <h2 className="break-words text-base font-bold text-slate-900 dark:text-white">{d.fullName}</h2>
+                          <p className="mt-0.5 break-words text-xs text-slate-500 dark:text-slate-400">{d.phone} · {d.homeLocality}</p>
+                        </div>
+                      </div>
+                      <span className={`shrink-0 rounded-full border px-2 py-1 text-[10px] font-semibold ${isEligible
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400'
+                        : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400'
+                      }`}>
+                        {isEligible ? 'Eligible' : d.eligibilityStatus.replace(/_/g, ' ')}
+                      </span>
+                    </div>
+
+                    <div className="grid min-w-0 grid-cols-2 gap-x-3 gap-y-2 rounded-xl bg-slate-50 p-3 text-xs dark:bg-slate-950">
+                      <p><span className="text-slate-500">Hemoglobin:</span> <strong className="text-slate-900 dark:text-white">{d.hemoglobinLevel} g/dL</strong></p>
+                      <p><span className="text-slate-500">Weight:</span> <strong className="text-slate-900 dark:text-white">{d.weight} kg</strong></p>
+                      <div className="col-span-2 flex flex-wrap gap-1">
+                        {d.bloodComponentEligibility?.map((component) => (
+                          <span key={component} className="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[10px] text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">{component}</span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="min-w-0 space-y-1 text-xs">
+                      <p className="flex min-w-0 items-start gap-1.5 break-all font-mono font-bold text-slate-900 dark:text-white">
+                        <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose-500" /> {d.verification?.certificateId}
+                      </p>
+                      <p className="break-words text-slate-600 dark:text-slate-400">{d.verification?.hospitalName}</p>
+                      <p className="break-words text-[11px] text-slate-500">Screener: {d.verification?.verifiedBy}</p>
+                      {d.deferralReason && <p className="break-words text-[11px] text-amber-700 dark:text-amber-300">Reason: {d.deferralReason}</p>}
+                      {aiReview && (
+                        <div className="rounded-lg bg-indigo-50 p-2 text-[11px] text-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-200">
+                          <span className="font-semibold">AI check {aiReview.status}:</span> <span className="break-words">{aiReview.summary}</span>
+                        </div>
+                      )}
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => void handleAiReview(d.id)}
+                          disabled={!d.verification?.certificateFileName || aiReviewInProgress === d.id}
+                          className="inline-flex items-center gap-1 font-semibold text-indigo-700 hover:text-indigo-900 disabled:opacity-50 dark:text-indigo-300 dark:hover:text-white"
+                        >
+                          <Sparkles className="h-3 w-3" /> {aiReviewInProgress === d.id ? 'Checking…' : 'Recheck with AI'}
+                        </button>
+                        {d.verification?.certificateFileName && (
+                          <button
+                            type="button"
+                            onClick={() => handleViewCertificate(d.id)}
+                            disabled={certificateInProgress === d.id}
+                            className="inline-flex items-center gap-1 font-semibold text-rose-600 hover:text-rose-700 disabled:opacity-50 dark:text-rose-400"
+                          >
+                            <ExternalLink className="h-3 w-3" /> {certificateInProgress === d.id ? 'Opening…' : 'View certificate'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-[1fr_auto] gap-2">
+                      {isEligible ? (
+                        <button
+                          onClick={() => handleUpdateStatus(d.id, 'temporary_deferral', 'Temporary health deferral')}
+                          disabled={isUpdating}
+                          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800 transition disabled:opacity-50 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
+                        >
+                          Defer
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleUpdateStatus(d.id, 'eligible')}
+                          disabled={isUpdating}
+                          className="flex items-center justify-center gap-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition disabled:opacity-50"
+                        >
+                          <ShieldCheck className="h-3.5 w-3.5" /> Approve & Activate
+                        </button>
+                      )}
+                      <button
+                        aria-label="Disqualify donor"
+                        onClick={() => handleUpdateStatus(d.id, 'permanent_deferral', 'Permanent deferral')}
+                        disabled={isUpdating}
+                        className="flex w-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-2 py-2 text-rose-600 shadow-sm transition disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-rose-400"
+                        title="Disqualify"
+                      >
+                        <XCircle className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
                 <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   <tr>
@@ -413,6 +516,7 @@ export const AdminDonorsPage: React.FC = () => {
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </div>
       </div>

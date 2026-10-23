@@ -215,7 +215,7 @@ export default function DonorRegisterPage() {
 
   if (step === 3) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex items-center justify-center p-6">
+      <div className="min-h-screen min-w-0 overflow-x-clip bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex items-center justify-center p-3 sm:p-6">
         <Card className="text-center max-w-md p-8 shadow-xl">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 mb-4">
             <CheckCircle2 className="h-8 w-8" />
@@ -230,7 +230,7 @@ export default function DonorRegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-between p-6 transition-colors duration-200">
+    <div className="min-h-screen min-w-0 overflow-x-clip bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-between p-3 transition-colors duration-200 sm:p-6">
       {/* Top Header */}
       <div className="sticky top-0 z-30 -mx-6 px-6 py-2 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-xl">
         <div className="mx-auto w-full max-w-3xl flex items-center justify-between">
@@ -247,8 +247,8 @@ export default function DonorRegisterPage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-3xl w-full py-8">
-        <Card className="p-8 shadow-xl">
+      <div className="mx-auto w-full max-w-3xl py-4 sm:py-8">
+        <Card className="p-4 shadow-xl sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-6 border-b border-slate-200 dark:border-slate-800">
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">

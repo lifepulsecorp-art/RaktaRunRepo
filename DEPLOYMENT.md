@@ -36,12 +36,16 @@ Add these variables to the `api` service in Vercel for Preview and Production:
 - `SUPABASE_SECRET_KEY`
 - `SUPABASE_CERTIFICATES_BUCKET` = `donor-certificates`
 - `JWT_SECRET` and `OTP_SECRET` (use separate long random values)
+- `ADMIN_EMAIL` = `admin@raktarun.in`
+- `ADMIN_PASSWORD` = the private password for the admin account; keep it as a server secret
 - `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and `FIREBASE_PRIVATE_KEY`
 - `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, and `BREVO_SENDER_NAME`
 - `ESCALATION_CRON_SECRET` (a long random value)
 - `GROQ_API_KEY` if certificate AI review is enabled
 
 The app uses `/api` on the same Vercel domain by default; no `VITE_API_URL` override is needed for this Services setup.
+
+To change the existing admin account credentials without reseeding other records, set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in the API environment and run `npm run admin:rotate` from `server/` against the configured database. This updates only the admin record and stores a bcrypt hash.
 
 ## 5. Import and deploy from GitHub
 
