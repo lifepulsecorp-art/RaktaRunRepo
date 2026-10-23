@@ -8,6 +8,7 @@ import { ThemeToggle } from '../../components/ui/ThemeToggle';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { PasswordInput } from '../../components/ui/PasswordInput';
 import {
   Building2,
   Phone,
@@ -327,9 +328,9 @@ export default function DonorRegisterPage() {
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
                   Password (min 8)
                 </label>
-                <input
+                <PasswordInput
                   required
-                  type="password"
+                  autoComplete="new-password"
                   minLength={8}
                   value={form.password}
                   onChange={(e) => update('password', e.target.value)}
