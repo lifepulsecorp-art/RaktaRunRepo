@@ -232,16 +232,18 @@ export default function DonorRegisterPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-between p-6 transition-colors duration-200">
       {/* Top Header */}
-      <div className="mx-auto w-full max-w-3xl flex items-center justify-between py-2">
-        <RaktaRunLogo size="md" />
-        <div className="flex items-center gap-3">
-          <ThemeToggle />
-          <Link
-            to={role === 'donor' ? '/donor' : '/register'}
-            className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 inline-flex items-center gap-1"
-          >
-            <ArrowLeft className="h-3 w-3" /> Back
-          </Link>
+      <div className="sticky top-0 z-30 -mx-6 px-6 py-2 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-xl">
+        <div className="mx-auto w-full max-w-3xl flex items-center justify-between">
+          <RaktaRunLogo size="md" />
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <Link
+              to={role === 'donor' ? '/donor' : '/register'}
+              className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 inline-flex items-center gap-1"
+            >
+              <ArrowLeft className="h-3 w-3" /> Back
+            </Link>
+          </div>
         </div>
       </div>
 

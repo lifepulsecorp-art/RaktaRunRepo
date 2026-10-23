@@ -89,14 +89,14 @@ export const AdminHospitalsPage: React.FC = () => {
   });
 
   const headerActions = (
-    <div className="flex items-center gap-3">
+    <div className="flex w-full min-w-0 flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
       <Link
         to="/admin/donors"
-        className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition shadow-sm"
+        className="min-w-0 whitespace-normal rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition shadow-sm sm:whitespace-nowrap"
       >
         Go to Donor Verification (Block I) →
       </Link>
-      <Badge variant="outline" className="border-emerald-300 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400">
+      <Badge variant="outline" className="w-fit border-emerald-300 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400">
         Live Audit Mode
       </Badge>
     </div>
@@ -109,7 +109,7 @@ export const AdminHospitalsPage: React.FC = () => {
       actions={headerActions}
       withSidebar={true}
     >
-      <div className="space-y-6">
+      <div className="w-full min-w-0 space-y-6">
         {message && (
           <div
             className={`mb-6 rounded-xl border p-4 text-sm flex items-center justify-between ${
@@ -126,8 +126,8 @@ export const AdminHospitalsPage: React.FC = () => {
         )}
 
         {/* Filters and Controls */}
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative flex-1 max-w-md">
+        <div className="mb-6 flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="relative w-full min-w-0 sm:max-w-md sm:flex-1">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
             <input
               type="text"
@@ -138,11 +138,11 @@ export const AdminHospitalsPage: React.FC = () => {
             />
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="grid w-full min-w-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center sm:gap-3">
             <select
               value={filterDistrict}
               onChange={(e) => setFilterDistrict(e.target.value)}
-              className="rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 focus:border-rose-500 focus:outline-none shadow-sm"
+              className="w-full min-w-0 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-2 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 focus:border-rose-500 focus:outline-none shadow-sm sm:w-auto sm:px-3"
             >
               <option value="All">All Districts</option>
               <option value="Udupi">Udupi District</option>
@@ -152,7 +152,7 @@ export const AdminHospitalsPage: React.FC = () => {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 focus:border-rose-500 focus:outline-none shadow-sm"
+              className="w-full min-w-0 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-2 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 focus:border-rose-500 focus:outline-none shadow-sm sm:w-auto sm:px-3"
             >
               <option value="All">All Statuses</option>
               <option value="verified">Verified (Approved)</option>
@@ -163,7 +163,7 @@ export const AdminHospitalsPage: React.FC = () => {
             <button
               onClick={fetchHospitals}
               disabled={loading}
-              className="flex items-center gap-1.5 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm"
+              className="col-span-2 flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm sm:col-span-1"
               title="Refresh records"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -173,7 +173,7 @@ export const AdminHospitalsPage: React.FC = () => {
         </div>
 
         {/* Hospitals Table */}
-        <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm dark:shadow-xl backdrop-blur-md">
+        <div className="w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm dark:shadow-xl backdrop-blur-md">
           {loading && hospitals.length === 0 ? (
             <div className="p-12 text-center text-slate-500 dark:text-slate-400">
               <RefreshCw className="mx-auto h-8 w-8 animate-spin text-rose-500" />
@@ -186,7 +186,81 @@ export const AdminHospitalsPage: React.FC = () => {
               <p className="text-xs text-slate-500 mt-1">Try adjusting the district or search query</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            <div className="divide-y divide-slate-100 p-3 dark:divide-slate-800/60 md:hidden">
+              {filteredHospitals.map((h) => {
+                const isVerified = h.verificationStatus === 'verified';
+                const isUpdating = actionInProgress === h.id;
+
+                return (
+                  <article key={h.id} className="min-w-0 space-y-3 py-4 first:pt-1 last:pb-1">
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h2 className="break-words text-base font-bold text-slate-900 dark:text-white">{h.name}</h2>
+                        <p className="mt-0.5 break-all font-mono text-[10px] text-slate-500">ID: {h.id}</p>
+                      </div>
+                      {isVerified ? (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400">
+                          <CheckCircle2 className="h-3 w-3" /> Accredited
+                        </span>
+                      ) : h.verificationStatus === 'pending' ? (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400">
+                          <Clock className="h-3 w-3" /> Pending
+                        </span>
+                      ) : (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2 py-1 text-[10px] font-semibold text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-400">
+                          <XCircle className="h-3 w-3" /> Rejected
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="grid min-w-0 grid-cols-1 gap-3 text-xs sm:grid-cols-2">
+                      <div className="min-w-0">
+                        <p className="flex items-center gap-1.5 font-semibold text-slate-800 dark:text-slate-300">
+                          <MapPin className="h-3.5 w-3.5 shrink-0 text-rose-500" /> {h.district}
+                        </p>
+                        <p className="mt-1 break-words text-slate-600 dark:text-slate-400">{h.address}</p>
+                        <p className="mt-1 font-mono text-[10px] text-slate-500">
+                          {h.coordinates?.latitude.toFixed(4)}, {h.coordinates?.longitude.toFixed(4)}
+                        </p>
+                      </div>
+                      <div className="min-w-0 space-y-1">
+                        <p className="break-words"><span className="text-slate-500">License:</span> <span className="font-mono text-slate-800 dark:text-slate-200">{h.licenseNumber}</span></p>
+                        <p className="break-words"><span className="text-slate-500">Reg:</span> <span className="font-mono text-slate-600 dark:text-slate-400">{h.registrationNumber}</span></p>
+                      </div>
+                      <div className="min-w-0 sm:col-span-2">
+                        <p className="break-words font-medium text-slate-900 dark:text-slate-200">{h.bloodBankContact?.name}</p>
+                        <p className="mt-1 flex min-w-0 items-start gap-1 break-all text-slate-600 dark:text-slate-400">
+                          <Phone className="mt-0.5 h-3 w-3 shrink-0 text-slate-400" /> {h.bloodBankContact?.phone}
+                        </p>
+                        <p className="mt-1 flex min-w-0 items-start gap-1 break-all text-slate-600 dark:text-slate-400">
+                          <Mail className="mt-0.5 h-3 w-3 shrink-0 text-slate-400" /> {h.bloodBankContact?.email}
+                        </p>
+                      </div>
+                    </div>
+
+                    {isVerified ? (
+                      <button
+                        onClick={() => handleVerify(h.id, 'rejected')}
+                        disabled={isUpdating}
+                        className="w-full rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 disabled:opacity-50 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300 dark:hover:bg-rose-500/20"
+                      >
+                        Revoke Approval
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleVerify(h.id, 'verified')}
+                        disabled={isUpdating}
+                        className="flex w-full items-center justify-center gap-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-md shadow-emerald-600/30 transition hover:bg-emerald-500 disabled:opacity-50"
+                      >
+                        <ShieldCheck className="h-3.5 w-3.5" /> Approve Accreditation
+                      </button>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
                 <thead className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   <tr>
@@ -294,6 +368,7 @@ export const AdminHospitalsPage: React.FC = () => {
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </div>
       </div>

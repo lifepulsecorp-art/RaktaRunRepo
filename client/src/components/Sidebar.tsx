@@ -76,7 +76,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed top-16 bottom-0 left-0 z-40 w-64 shrink-0 overflow-y-auto border-r border-slate-200/80 bg-white/95 backdrop-blur-xl p-4 transition-transform duration-300 ease-in-out dark:border-slate-800/80 dark:bg-slate-950/95 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] ${
+        className={`fixed top-0 bottom-0 left-0 z-40 w-64 shrink-0 overflow-y-auto border-r border-slate-200/80 bg-white p-4 pt-20 transition-transform duration-300 ease-in-out dark:border-slate-800/80 dark:bg-slate-950 lg:sticky lg:top-16 lg:bottom-auto lg:h-[calc(100vh-4rem)] lg:bg-white/95 lg:pt-4 lg:backdrop-blur-xl lg:dark:bg-slate-950/95 ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         } ${className}`}
       >
