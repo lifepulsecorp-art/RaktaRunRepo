@@ -230,7 +230,7 @@ export const AdminDonorsPage: React.FC = () => {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full min-w-0 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-2 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 focus:border-rose-500 focus:outline-none shadow-sm sm:w-auto sm:px-3"
+              className="col-span-2 w-full min-w-0 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-2 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 focus:border-rose-500 focus:outline-none shadow-sm sm:col-span-1 sm:w-auto sm:px-3"
             >
               <option value="All">All Statuses</option>
               <option value="pending">Pending Verification</option>
@@ -282,11 +282,11 @@ export const AdminDonorsPage: React.FC = () => {
                           <p className="mt-0.5 break-words text-xs text-slate-500 dark:text-slate-400">{d.phone} · {d.homeLocality}</p>
                         </div>
                       </div>
-                      <span className={`shrink-0 rounded-full border px-2 py-1 text-[10px] font-semibold ${isEligible
+                      <span className={`max-w-[45%] min-w-0 rounded-full border px-2 py-1 text-center text-[10px] font-semibold leading-tight ${isEligible
                         ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400'
                         : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400'
                       }`}>
-                        {isEligible ? 'Eligible' : d.eligibilityStatus.replace(/_/g, ' ')}
+                        {isEligible ? 'Eligible' : d.eligibilityStatus === 'temporary_deferral' ? 'Temporary Deferral' : d.eligibilityStatus === 'permanent_deferral' ? 'Permanent Deferral' : 'Pending Verification'}
                       </span>
                     </div>
 
@@ -308,7 +308,13 @@ export const AdminDonorsPage: React.FC = () => {
                       <p className="break-words text-[11px] text-slate-500">Screener: {d.verification?.verifiedBy}</p>
                       {d.deferralReason && <p className="break-words text-[11px] text-amber-700 dark:text-amber-300">Reason: {d.deferralReason}</p>}
                       {aiReview && (
-                        <div className="rounded-lg bg-indigo-50 p-2 text-[11px] text-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-200">
+                        <div className={`rounded-lg p-2 text-[11px] text-white ${
+                          aiReview.status === 'passed'
+                            ? 'bg-emerald-600 dark:bg-emerald-700'
+                            : aiReview.status === 'failed'
+                              ? 'bg-rose-600 dark:bg-rose-700'
+                              : 'bg-amber-600 dark:bg-amber-700'
+                        }`}>
                           <span className="font-semibold">AI check {aiReview.status}:</span> <span className="break-words">{aiReview.summary}</span>
                         </div>
                       )}
@@ -339,9 +345,9 @@ export const AdminDonorsPage: React.FC = () => {
                         <button
                           onClick={() => handleUpdateStatus(d.id, 'temporary_deferral', 'Temporary health deferral')}
                           disabled={isUpdating}
-                          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800 transition disabled:opacity-50 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
+                          className="min-w-0 rounded-lg border border-amber-300 bg-amber-50 px-2 py-2 text-center text-[11px] font-semibold leading-tight text-amber-800 transition disabled:opacity-50 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
                         >
-                          Defer
+                          Temporary Deferral
                         </button>
                       ) : (
                         <button
@@ -428,10 +434,10 @@ export const AdminDonorsPage: React.FC = () => {
                             <div className="mt-2 max-w-xs">
                               <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-[10px] font-bold ${
                                 d.verification.aiReview.status === 'passed'
-                                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300'
+                                  ? 'border-emerald-700 bg-emerald-600 text-white dark:border-emerald-500 dark:bg-emerald-600 dark:text-white'
                                   : d.verification.aiReview.status === 'failed'
-                                    ? 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300'
-                                    : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300'
+                                    ? 'border-rose-700 bg-rose-600 text-white dark:border-rose-500 dark:bg-rose-600 dark:text-white'
+                                    : 'border-amber-700 bg-amber-600 text-white dark:border-amber-500 dark:bg-amber-600 dark:text-white'
                               }`}>
                                 <Sparkles className="h-3 w-3" />
                                 {d.verification.aiReview.status === 'passed' ? 'AI check passed' : d.verification.aiReview.status === 'failed' ? 'AI check failed' : 'AI check unavailable'}

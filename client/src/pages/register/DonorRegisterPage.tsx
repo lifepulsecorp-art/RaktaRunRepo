@@ -9,6 +9,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { PasswordInput } from '../../components/ui/PasswordInput';
+import { getEmailValidationMessage } from '../../utils/emailValidation';
 import {
   Building2,
   Phone,
@@ -91,6 +92,7 @@ export default function DonorRegisterPage() {
   const { role, refreshProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [step, setStep] = useState(1);
   const [showHospitalModal, setShowHospitalModal] = useState(false);
   const [hospitalList, setHospitalList] = useState(DEFAULT_HOSPITALS);
@@ -150,6 +152,13 @@ export default function DonorRegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    const emailValidationError = getEmailValidationMessage(form.email);
+    if (emailValidationError) {
+      setEmailError(emailValidationError);
+      return;
+    }
+    setEmailError('');
 
     const cleanFullName = form.fullName.trim();
     const cleanPhone = form.phone.trim();
@@ -231,7 +240,7 @@ export default function DonorRegisterPage() {
   }
 
   return (
-    <div className="min-h-screen min-w-0 overflow-x-clip bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-between p-3 transition-colors duration-200 sm:p-6">
+    <div className={`min-w-0 overflow-x-clip bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col p-3 transition-colors duration-200 sm:p-6 ${step === 2 ? 'h-[100dvh] overflow-y-hidden' : 'min-h-screen justify-between'}`}>
       {/* Top Header */}
       <div className="sticky top-0 z-30 -mx-6 px-6 py-2 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-xl">
         <div className="mx-auto w-full max-w-3xl flex items-center justify-between">
@@ -248,9 +257,9 @@ export default function DonorRegisterPage() {
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-3xl py-4 sm:py-8">
-        <Card className="p-4 shadow-xl sm:p-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-6 border-b border-slate-200 dark:border-slate-800">
+      <div className={`mx-auto w-full max-w-3xl py-4 sm:py-8 ${step === 2 ? 'flex min-h-0 flex-1 items-center' : ''}`}>
+        <Card className={step === 2 ? 'border-0 bg-transparent p-0 shadow-none dark:border-0 dark:bg-transparent dark:shadow-none' : 'p-4 shadow-xl sm:p-8'}>
+          {step !== 2 && <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-6 border-b border-slate-200 dark:border-slate-800">
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
                 Donor Registration
@@ -267,9 +276,9 @@ export default function DonorRegisterPage() {
               <FileQuestion className="h-4 w-4 text-rose-500" />
               <span>Don't have a certificate?</span>
             </button>
-          </div>
+          </div>}
 
-          {error && (
+          {step !== 2 && error && (
             <div className="mb-6 flex items-center gap-2.5 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 p-4 text-sm text-rose-800 dark:text-rose-200">
               <AlertCircle className="h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
               <span>{error}</span>
@@ -318,11 +327,20 @@ export default function DonorRegisterPage() {
                 <input
                   required
                   type="email"
+                  aria-invalid={Boolean(emailError)}
+                  aria-describedby={emailError ? 'donor-email-error' : undefined}
                   value={form.email}
-                  onChange={(e) => update('email', e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    update('email', value);
+                    if (emailError) setEmailError(getEmailValidationMessage(value));
+                  }}
+                  onBlur={(e) => setEmailError(getEmailValidationMessage(e.currentTarget.value))}
+                  onInvalid={(e) => setEmailError(getEmailValidationMessage(e.currentTarget.value))}
                   placeholder="donor@example.com"
                   className={inputClass}
                 />
+                {emailError && <p id="donor-email-error" role="alert" className="mt-1.5 text-xs text-rose-600 dark:text-rose-400">{emailError}</p>}
               </div>
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
@@ -373,8 +391,12 @@ export default function DonorRegisterPage() {
                 </label>
                 <input
                   required
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
                   value={form.pincode}
-                  onChange={(e) => update('pincode', e.target.value)}
+                  onChange={(e) => update('pincode', e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="576104"
                   className={inputClass}
                 />

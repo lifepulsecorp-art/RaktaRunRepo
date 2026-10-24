@@ -10,6 +10,7 @@ import { Badge } from '../../components/ui/Badge';
 import { PasswordInput } from '../../components/ui/PasswordInput';
 import EmailOtpVerification from '../../components/EmailOtpVerification';
 import { ArrowLeft, Building2, CheckCircle2, AlertCircle, MapPin } from 'lucide-react';
+import { getEmailValidationMessage } from '../../utils/emailValidation';
 
 const inputClass = 'w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 transition shadow-sm';
 
@@ -17,6 +18,7 @@ export default function HospitalRegisterPage() {
   const { role, refreshProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [done, setDone] = useState(false);
   const [otpStep, setOtpStep] = useState(false);
   const [form, setForm] = useState({
@@ -45,10 +47,16 @@ export default function HospitalRegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    const emailValidationError = getEmailValidationMessage(form.email);
+    if (emailValidationError) {
+      setEmailError(emailValidationError);
+      return;
+    }
+    setEmailError('');
     try {
       setLoading(true);
       await api.post('/auth/register', {
-        email: form.email,
+        email: form.email.trim(),
         password: form.password,
         role: 'hospital',
         displayName: form.name,
@@ -100,7 +108,7 @@ export default function HospitalRegisterPage() {
   }
 
   return (
-    <div className="min-h-screen min-w-0 overflow-x-clip bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-between p-3 transition-colors duration-200 sm:p-6">
+    <div className={`min-w-0 overflow-x-clip bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col p-3 transition-colors duration-200 sm:p-6 ${otpStep ? 'h-[100dvh] overflow-y-hidden' : 'min-h-screen justify-between'}`}>
       {/* Top Header */}
       <div className="sticky top-0 z-30 -mx-6 px-6 py-2 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-xl">
         <div className="mx-auto w-full max-w-3xl flex items-center justify-between">
@@ -117,23 +125,23 @@ export default function HospitalRegisterPage() {
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-3xl py-4 sm:py-8">
-        <Card className="p-4 shadow-xl sm:p-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+      <div className={`mx-auto w-full max-w-3xl py-4 sm:py-8 ${otpStep ? 'flex min-h-0 flex-1 items-center' : ''}`}>
+        <Card className={otpStep ? 'border-0 bg-transparent p-0 shadow-none dark:border-0 dark:bg-transparent dark:shadow-none' : 'p-4 shadow-xl sm:p-8'}>
+          {!otpStep && <div className="mb-5 flex min-w-0 flex-col items-start gap-2 sm:mb-6 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <h1 className="break-words text-xl font-bold leading-tight tracking-tight text-slate-900 dark:text-white sm:text-2xl">
                 Hospital Authority Registration
               </h1>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
                 Your medical center will be reviewed by a RaktaRun administrator before emergency broadcast permissions are activated.
               </p>
             </div>
-            <Badge variant="success" className="hidden sm:inline-flex gap-1">
+            <Badge variant="success" className="inline-flex max-w-full shrink-0 gap-1 whitespace-nowrap">
               <Building2 className="h-3 w-3" /> Healthcare Portal
             </Badge>
-          </div>
+          </div>}
 
-          {error && (
+          {!otpStep && error && (
             <div className="mb-6 flex items-center gap-2.5 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 p-4 text-sm text-rose-800 dark:text-rose-200">
               <AlertCircle className="h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
               <span>{error}</span>
@@ -155,11 +163,20 @@ export default function HospitalRegisterPage() {
                 <input
                   required
                   type="email"
+                  aria-invalid={Boolean(emailError)}
+                  aria-describedby={emailError ? 'hospital-email-error' : undefined}
                   value={form.email}
-                  onChange={(e) => update('email', e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    update('email', value);
+                    if (emailError) setEmailError(getEmailValidationMessage(value));
+                  }}
+                  onBlur={(e) => setEmailError(getEmailValidationMessage(e.currentTarget.value))}
+                  onInvalid={(e) => setEmailError(getEmailValidationMessage(e.currentTarget.value))}
                   placeholder="hospital@example.com"
                   className={inputClass}
                 />
+                {emailError && <p id="hospital-email-error" role="alert" className="mt-1.5 text-xs text-rose-600 dark:text-rose-400">{emailError}</p>}
               </div>
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
@@ -236,8 +253,12 @@ export default function HospitalRegisterPage() {
                 </label>
                 <input
                   required
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
                   value={form.pincode}
-                  onChange={(e) => update('pincode', e.target.value)}
+                  onChange={(e) => update('pincode', e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="576104"
                   className={inputClass}
                 />
