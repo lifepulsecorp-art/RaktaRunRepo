@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
@@ -19,6 +19,7 @@ export default function HospitalRegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [emailError, setEmailError] = useState('');
+  const errorRef = useRef<HTMLDivElement>(null);
   const [done, setDone] = useState(false);
   const [otpStep, setOtpStep] = useState(false);
   const [form, setForm] = useState({
@@ -37,6 +38,10 @@ export default function HospitalRegisterPage() {
     longitude: 74.7927,
   });
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (error) errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [error]);
 
   const update = (k: string, v: any) => setForm({ ...form, [k]: v });
 
@@ -127,22 +132,22 @@ export default function HospitalRegisterPage() {
 
       <div className={`mx-auto w-full max-w-3xl py-4 sm:py-8 ${otpStep ? 'flex min-h-0 flex-1 items-center' : ''}`}>
         <Card className={otpStep ? 'border-0 bg-transparent p-0 shadow-none dark:border-0 dark:bg-transparent dark:shadow-none' : 'p-4 shadow-xl sm:p-8'}>
-          {!otpStep && <div className="mb-5 flex min-w-0 flex-col items-start gap-2 sm:mb-6 sm:flex-row sm:items-start sm:justify-between">
+          <div className={`flex min-w-0 flex-col items-start sm:flex-row sm:items-start sm:justify-between ${otpStep ? 'mb-3 gap-1.5' : 'mb-5 gap-2 sm:mb-6'}`}>
             <div className="min-w-0">
-              <h1 className="break-words text-xl font-bold leading-tight tracking-tight text-slate-900 dark:text-white sm:text-2xl">
+              <h1 className={`break-words font-bold leading-tight tracking-tight text-slate-900 dark:text-white ${otpStep ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'}`}>
                 Hospital Authority Registration
               </h1>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
+              <p className={`mt-1 text-slate-600 dark:text-slate-400 ${otpStep ? 'text-[11px] leading-4 sm:text-xs' : 'text-xs sm:text-sm'}`}>
                 Your medical center will be reviewed by a RaktaRun administrator before emergency broadcast permissions are activated.
               </p>
             </div>
             <Badge variant="success" className="inline-flex max-w-full shrink-0 gap-1 whitespace-nowrap">
               <Building2 className="h-3 w-3" /> Healthcare Portal
             </Badge>
-          </div>}
+          </div>
 
           {!otpStep && error && (
-            <div className="mb-6 flex items-center gap-2.5 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 p-4 text-sm text-rose-800 dark:text-rose-200">
+            <div ref={errorRef} role="alert" className="mb-6 flex items-center gap-2.5 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 p-4 text-sm text-rose-800 dark:text-rose-200">
               <AlertCircle className="h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
               <span>{error}</span>
             </div>
@@ -154,7 +159,28 @@ export default function HospitalRegisterPage() {
               onVerified={completeRegistration}
               onBack={() => setOtpStep(false)}
             />
-          ) : <form onSubmit={handleSubmit} className="space-y-4">
+          ) : <form
+            onSubmit={handleSubmit}
+            onInvalidCapture={(event) => {
+              event.preventDefault();
+              const field = event.target as HTMLInputElement;
+              const label = field.labels?.[0]?.textContent?.trim()
+                || field.parentElement?.querySelector('label')?.textContent?.trim()
+                || field.parentElement?.parentElement?.querySelector('label')?.textContent?.trim()
+                || 'This field';
+              const reason = field.type === 'email'
+                ? getEmailValidationMessage(field.value) || 'has an invalid format.'
+                : field.validity.valueMissing
+                  ? 'is required.'
+                  : field.validity.typeMismatch
+                    ? 'has an invalid format.'
+                    : field.validity.patternMismatch
+                      ? 'does not match the required format.'
+                      : 'is invalid.';
+              setError(`${label}: ${reason}`);
+            }}
+            className="space-y-4"
+          >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">

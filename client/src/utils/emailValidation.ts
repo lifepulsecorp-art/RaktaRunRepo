@@ -27,6 +27,9 @@ export function getEmailValidationMessage(email: string): string {
   if (domainParts.some((part) => !part || part.startsWith('-') || part.endsWith('-') || !/^[a-zA-Z0-9-]+$/.test(part))) {
     return 'Check the domain after @; each part must use letters, numbers, or hyphens.';
   }
+  if (domainParts[domainParts.length - 1].length < 2) {
+    return 'The email ending looks incomplete; use a suffix such as .com or .in.';
+  }
 
   return '';
 }

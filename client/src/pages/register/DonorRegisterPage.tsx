@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
@@ -10,6 +10,7 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { PasswordInput } from '../../components/ui/PasswordInput';
 import { getEmailValidationMessage } from '../../utils/emailValidation';
+import { COUNTRY_CALLING_CODES } from '../../utils/countryCallingCodes';
 import {
   Building2,
   Phone,
@@ -93,7 +94,9 @@ export default function DonorRegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [emailError, setEmailError] = useState('');
+  const errorRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState(1);
+  const [phoneCountry, setPhoneCountry] = useState('IN');
   const [showHospitalModal, setShowHospitalModal] = useState(false);
   const [hospitalList, setHospitalList] = useState(DEFAULT_HOSPITALS);
   const [form, setForm] = useState({
@@ -129,7 +132,13 @@ export default function DonorRegisterPage() {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (error) errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [error]);
+
   const update = (k: string, v: any) => setForm({ ...form, [k]: v });
+  const selectedCallingCode = COUNTRY_CALLING_CODES.find((country) => country.region === phoneCountry)?.callingCode || '91';
+  const maxNationalNumberLength = 15 - selectedCallingCode.length;
 
   const handleCertificateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
@@ -210,7 +219,7 @@ export default function DonorRegisterPage() {
     const certificateFileBase64 = form.certificate ? await readFileAsBase64(form.certificate) : '';
     await api.post('/donors/register', {
       fullName: form.fullName.trim(),
-      phone: form.phone.trim(),
+      phone: `+${selectedCallingCode}${form.phone.trim()}`,
       bloodGroup: form.bloodGroup.trim(),
       homeLocality: form.homeLocality.trim(),
       pincode: form.pincode.trim(),
@@ -259,27 +268,27 @@ export default function DonorRegisterPage() {
 
       <div className={`mx-auto w-full max-w-3xl py-4 sm:py-8 ${step === 2 ? 'flex min-h-0 flex-1 items-center' : ''}`}>
         <Card className={step === 2 ? 'border-0 bg-transparent p-0 shadow-none dark:border-0 dark:bg-transparent dark:shadow-none' : 'p-4 shadow-xl sm:p-8'}>
-          {step !== 2 && <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-6 border-b border-slate-200 dark:border-slate-800">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <div className={`flex flex-col justify-between border-b border-slate-200 dark:border-slate-800 sm:flex-row sm:items-center ${step === 2 ? 'mb-3 gap-2 pb-3' : 'mb-6 gap-3 pb-6'}`}>
+            <div className="min-w-0">
+              <h1 className={`font-bold tracking-tight text-slate-900 dark:text-white ${step === 2 ? 'text-lg leading-tight sm:text-xl' : 'text-2xl'}`}>
                 Donor Registration
               </h1>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
+              <p className={`mt-1 text-slate-600 dark:text-slate-400 ${step === 2 ? 'text-[11px] leading-4 sm:text-xs' : 'text-xs sm:text-sm'}`}>
                 You must possess an authorized hospital-issued medical certificate to register.
               </p>
             </div>
             <button
               type="button"
               onClick={() => setShowHospitalModal(true)}
-              className="self-start sm:self-auto flex items-center gap-1.5 rounded-xl border border-rose-300 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 px-3.5 py-2 text-xs font-bold text-rose-700 dark:text-rose-300 transition shadow-sm"
+              className={`self-start flex items-center gap-1.5 rounded-xl border border-rose-300 bg-rose-50 font-bold text-rose-700 shadow-sm transition hover:bg-rose-100 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300 dark:hover:bg-rose-500/20 sm:self-auto ${step === 2 ? 'px-2.5 py-1.5 text-[10px]' : 'px-3.5 py-2 text-xs'}`}
             >
-              <FileQuestion className="h-4 w-4 text-rose-500" />
+              <FileQuestion className="h-4 w-4 shrink-0 text-rose-500" />
               <span>Don't have a certificate?</span>
             </button>
-          </div>}
+          </div>
 
           {step !== 2 && error && (
-            <div className="mb-6 flex items-center gap-2.5 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 p-4 text-sm text-rose-800 dark:text-rose-200">
+            <div ref={errorRef} role="alert" className="mb-6 flex items-center gap-2.5 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 p-4 text-sm text-rose-800 dark:text-rose-200">
               <AlertCircle className="h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
               <span>{error}</span>
             </div>
@@ -291,7 +300,28 @@ export default function DonorRegisterPage() {
               onVerified={completeRegistration}
               onBack={() => setStep(1)}
             />
-          ) : <form onSubmit={handleSubmit} className="space-y-4">
+          ) : <form
+            onSubmit={handleSubmit}
+            onInvalidCapture={(event) => {
+              event.preventDefault();
+              const field = event.target as HTMLInputElement;
+              const label = field.labels?.[0]?.textContent?.trim()
+                || field.parentElement?.querySelector('label')?.textContent?.trim()
+                || field.parentElement?.parentElement?.querySelector('label')?.textContent?.trim()
+                || 'This field';
+              const reason = field.type === 'email'
+                ? getEmailValidationMessage(field.value) || 'has an invalid format.'
+                : field.validity.valueMissing
+                  ? 'is required.'
+                  : field.validity.typeMismatch
+                    ? 'has an invalid format.'
+                    : field.validity.patternMismatch
+                      ? `must contain 4 to ${maxNationalNumberLength} digits.`
+                      : 'is invalid.';
+              setError(`${label}: ${reason}`);
+            }}
+            className="space-y-4"
+          >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
@@ -309,13 +339,33 @@ export default function DonorRegisterPage() {
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
                   Phone Number
                 </label>
-                <input
-                  required
-                  value={form.phone}
-                  onChange={(e) => update('phone', e.target.value)}
-                  placeholder="+919876543210"
-                  className={inputClass}
-                />
+                <div className="flex min-w-0 gap-2">
+                  <select
+                    aria-label="Country calling code"
+                    autoComplete="tel-country-code"
+                    value={phoneCountry}
+                    onChange={(e) => setPhoneCountry(e.target.value)}
+                    className="w-[43%] min-w-0 rounded-xl border border-slate-300 bg-white px-2.5 py-2.5 text-xs text-slate-900 shadow-sm transition focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 dark:border-slate-800 dark:bg-slate-900 dark:text-white sm:text-sm"
+                  >
+                    {COUNTRY_CALLING_CODES.map((country) => (
+                      <option key={country.region} value={country.region}>
+                        {country.name} (+{country.callingCode})
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    required
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel-national"
+                    pattern={`[0-9]{4,${maxNationalNumberLength}}`}
+                    maxLength={maxNationalNumberLength}
+                    value={form.phone}
+                    onChange={(e) => update('phone', e.target.value.replace(/\D/g, '').slice(0, maxNationalNumberLength))}
+                    placeholder="Phone number"
+                    className={`${inputClass} min-w-0 flex-1`}
+                  />
+                </div>
               </div>
             </div>
 
