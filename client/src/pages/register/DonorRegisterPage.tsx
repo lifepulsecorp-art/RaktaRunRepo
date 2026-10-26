@@ -572,11 +572,11 @@ export default function DonorRegisterPage() {
                     key={hosp.id}
                     className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/70 p-4 hover:border-rose-400 transition"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-bold text-slate-900 dark:text-white text-sm">{hosp.name}</h4>
-                          <span className="rounded-md bg-rose-50 dark:bg-rose-500/10 px-2 py-0.5 text-[10px] font-bold text-rose-700 dark:text-rose-300">
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                          <h4 className="min-w-0 break-words font-bold text-slate-900 dark:text-white text-sm">{hosp.name}</h4>
+                          <span className="shrink-0 whitespace-nowrap rounded-md bg-rose-50 dark:bg-rose-500/10 px-2 py-0.5 text-[10px] font-bold text-rose-700 dark:text-rose-300">
                             {hosp.district}
                           </span>
                         </div>
