@@ -46,7 +46,7 @@ export const RaktaRunLogo: React.FC<RaktaRunLogoProps> = ({
       className={`inline-flex min-w-0 shrink-0 items-center ${dimensions.gap} select-none ${className}`}
     >
       <img
-        src="/favicon.png"
+        src="/raktarun-emblem.svg"
         alt=""
         aria-hidden="true"
         className={`${dimensions.icon} shrink-0 object-contain ${animate ? 'animate-heart-pulse' : ''}`}

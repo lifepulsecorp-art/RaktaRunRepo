@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <clipPath id="emblem-only">
+      <rect width="512" height="460" />
+    </clipPath>
+  </defs>
+  <image
+    href="/favicon.png"
+    x="11"
+    y="0"
+    width="490"
+    height="490"
+    preserveAspectRatio="none"
+    clip-path="url(#emblem-only)"
+  />
+</svg>
