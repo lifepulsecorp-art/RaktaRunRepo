@@ -54,7 +54,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          <RaktaRunLogo size="md" subtitle="Coastal Karnataka Emergency Response" />
+          <RaktaRunLogo size="md" />
 
           {/* Regional network pill indicator */}
           <div className="hidden xl:flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">

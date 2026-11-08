@@ -28,7 +28,9 @@ app.use(cors({
     'http://localhost:5173',
     'https://rakta-run-repo.vercel.app',
     'https://www.raktarun.in',
-    'https://raktarun.in'
+    'https://raktarun.in',
+    'https://raktarun.com',
+    'https://www.raktarun.com'
   ], 
   credentials: true 
 }));

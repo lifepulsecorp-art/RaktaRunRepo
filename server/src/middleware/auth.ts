@@ -69,6 +69,11 @@ export async function authenticate(req: AuthenticatedRequest, res: Response, nex
   return res.status(401).json({ error: 'Unauthorized: Invalid or expired token' });
 }
 
+export function optionalAuthenticate(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  if (!req.headers.authorization) return next();
+  return authenticate(req, res, next);
+}
+
 export function authorizeRoles(...roles: UserRole[]) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     if (!req.user) {

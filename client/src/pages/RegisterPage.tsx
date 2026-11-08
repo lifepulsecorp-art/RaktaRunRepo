@@ -24,7 +24,7 @@ export default function RegisterPage() {
       {/* Top Header */}
       <div className="sticky top-0 z-30 -mx-6 px-6 py-2 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur-xl">
         <div className="mx-auto w-full max-w-5xl flex items-center justify-between">
-          <RaktaRunLogo size="md" showSubtitle={true} />
+          <RaktaRunLogo size="md" />
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <Link

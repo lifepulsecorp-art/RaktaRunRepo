@@ -62,7 +62,7 @@ export const LoginPage: React.FC = () => {
         <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-rose-500/10 dark:bg-rose-500/20 blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex items-center justify-between">
-          <RaktaRunLogo size="lg" showSubtitle={true} />
+          <RaktaRunLogo size="lg" />
           <Link
             to="/"
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition"
@@ -107,7 +107,7 @@ export const LoginPage: React.FC = () => {
         <div className="w-full max-w-md space-y-5 sm:space-y-6">
           <div className="text-center lg:text-left">
             <div className="lg:hidden flex justify-center mb-6">
-              <RaktaRunLogo size="md" showSubtitle={true} />
+              <RaktaRunLogo size="md" />
             </div>
             <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Sign In to RaktaRun</h3>
             <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-400">

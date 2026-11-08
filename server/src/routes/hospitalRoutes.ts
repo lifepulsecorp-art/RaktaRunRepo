@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { authenticate, authorizeRoles, AuthenticatedRequest } from '../middleware/auth.js';
+import { authenticate, authorizeRoles, AuthenticatedRequest, optionalAuthenticate } from '../middleware/auth.js';
 import { readJson, find, filter, insert, update } from '../utils/db.js';
 import type { Hospital, BloodRequest, Match, Donor, BloodGroup, BloodComponent, User, AuditLog, BuddyReferral, BuddyConcernCategory } from '../types.js';
 import { findCandidates } from '../services/matching.js';
@@ -10,26 +10,56 @@ import { dispatchAlertNotifications, sendRegistrationNotification } from '../ser
 
 const router = Router();
 
+function publicHospitalDetails(hospital: Hospital) {
+  return {
+    id: hospital.id,
+    name: hospital.name,
+    address: hospital.address,
+    district: hospital.district,
+    coordinates: hospital.coordinates,
+    verificationStatus: hospital.verificationStatus,
+    bloodBankContact: {
+      name: hospital.bloodBankContact?.name || '',
+      phone: hospital.bloodBankContact?.phone || '',
+    },
+  };
+}
+
 async function audit(req: AuthenticatedRequest, action: string, entityType: string, entityId: string, details?: Record<string, unknown>) {
   (await insert<AuditLog>('auditLogs', { id: `audit_${uuidv4().slice(0, 10)}`, actorUid: req.user!.uid, actorRole: req.user!.role, action, entityType, entityId, details, createdAt: new Date().toISOString() }));
 }
 
-// GET /api/hospitals - List hospitals
-router.get('/', async (req, res) => {
+// Hospital accounts see their own record; other users get the public donor directory.
+router.get('/', optionalAuthenticate, async (req: AuthenticatedRequest, res) => {
   const hospitals = (await readJson<Hospital>('hospitals'));
-  res.json(hospitals);
+  if (req.user?.role === 'hospital') {
+    return res.json(hospitals.filter((hospital) => hospital.uid === req.user!.uid || hospital.id === req.user!.hospitalId));
+  }
+  if (req.user?.role === 'admin') return res.json(hospitals);
+  return res.json(hospitals.map(publicHospitalDetails));
 });
 
-// GET /api/hospitals/:id - Hospital details
-router.get('/:id', async (req, res) => {
+// Hospital accounts can access full details only for their connected record.
+router.get('/:id', optionalAuthenticate, async (req: AuthenticatedRequest, res) => {
   const hospital = (await find<Hospital>('hospitals', (h) => h.id === req.params.id));
   if (!hospital) return res.status(404).json({ error: 'Hospital not found' });
-  res.json(hospital);
+  if (req.user?.role === 'hospital' && hospital.uid !== req.user.uid && hospital.id !== req.user.hospitalId) {
+    return res.status(404).json({ error: 'Hospital not found' });
+  }
+  if (req.user?.role === 'admin' || (req.user?.role === 'hospital' && (hospital.uid === req.user.uid || hospital.id === req.user.hospitalId))) {
+    return res.json(hospital);
+  }
+  return res.json(publicHospitalDetails(hospital));
 });
 
 // POST /api/hospitals - Register a hospital
 router.post('/', authenticate, async (req: AuthenticatedRequest, res) => {
   const { name, address, district, coordinates, bloodBankContact, licenseNumber, registrationNumber } = req.body;
+
+  if (req.user?.role === 'hospital') {
+    const existing = await find<Hospital>('hospitals', (hospital) => hospital.uid === req.user!.uid || hospital.id === req.user!.hospitalId);
+    if (existing) return res.status(409).json({ error: 'This hospital account is already connected to a facility.', hospitalId: existing.id });
+  }
 
   if (!name || !address || !district || !coordinates || !bloodBankContact || !licenseNumber) {
     return res.status(400).json({ error: 'Missing required hospital fields' });
@@ -73,6 +103,9 @@ router.post('/register', authenticate, async (req: AuthenticatedRequest, res) =>
 
   // Check if hospital already exists for this UID
   let existing = (await find<Hospital>('hospitals', (h) => h.uid === req.user!.uid));
+  if (req.user!.hospitalId && existing?.id !== req.user!.hospitalId) {
+    return res.status(409).json({ error: 'Your account is already connected to a different hospital.' });
+  }
   if (existing) {
     const updated = (await update<Hospital>('hospitals', existing.id, {
       name,

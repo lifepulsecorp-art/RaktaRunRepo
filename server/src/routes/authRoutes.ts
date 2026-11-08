@@ -93,7 +93,9 @@ router.post('/login', async (req, res) => {
   if (user.role === 'donor') {
     roleData = (await find<Donor>('donors', (d) => d.uid === user.uid || d.id === user.donorId)) || null;
   } else if (user.role === 'hospital') {
-    roleData = (await find<Hospital>('hospitals', (h) => h.uid === user.uid || h.id === user.hospitalId)) || null;
+    roleData = (user.hospitalId ? await find<Hospital>('hospitals', (h) => h.id === user.hospitalId) : undefined)
+      || (await find<Hospital>('hospitals', (h) => h.uid === user.uid))
+      || null;
   }
 
   res.json({ message: 'Login successful', token, user: publicUser(user), profile: roleData });
@@ -249,7 +251,11 @@ router.get('/me', authenticate, async (req: AuthenticatedRequest, res) => {
   const user = req.user!;
   let roleData: any = null;
   if (user.role === 'donor') roleData = (await find<Donor>('donors', (d) => d.uid === user.uid || d.id === user.donorId)) || null;
-  else if (user.role === 'hospital') roleData = (await find<Hospital>('hospitals', (h) => h.uid === user.uid || h.id === user.hospitalId)) || null;
+  else if (user.role === 'hospital') {
+    roleData = (user.hospitalId ? await find<Hospital>('hospitals', (h) => h.id === user.hospitalId) : undefined)
+      || (await find<Hospital>('hospitals', (h) => h.uid === user.uid))
+      || null;
+  }
   res.json({ user: publicUser(user), profile: roleData });
 });
 
@@ -260,7 +266,17 @@ router.post('/sync', authenticate, async (req: AuthenticatedRequest, res) => {
   const patch: Partial<User> = {};
   if (name) patch.name = name;
   if (phone) patch.phone = phone;
-  if (hospitalId) patch.hospitalId = hospitalId;
+  if (hospitalId) {
+    if (user.role !== 'hospital') return res.status(403).json({ error: 'Only hospital accounts can connect a hospital record.' });
+    const hospital = await find<Hospital>('hospitals', (entry) => entry.id === String(hospitalId).trim());
+    if (!hospital || hospital.uid !== user.uid) {
+      return res.status(403).json({ error: 'This hospital record is not linked to your account.' });
+    }
+    if (user.hospitalId && user.hospitalId !== hospital.id) {
+      return res.status(409).json({ error: 'Your account is already connected to a different hospital.' });
+    }
+    patch.hospitalId = hospital.id;
+  }
   if (donorId) patch.donorId = donorId;
   const updatedUser = (await update<User>('users', user.uid, patch)) || user;
 
@@ -274,7 +290,8 @@ router.post('/sync', authenticate, async (req: AuthenticatedRequest, res) => {
       (await update<Donor>('donors', donor.id, donorPatch));
     }
   } else if (user.role === 'hospital' && (name || phone)) {
-    const hospital = (await find<Hospital>('hospitals', (entry) => entry.uid === user.uid || entry.id === updatedUser.hospitalId));
+    const hospital = (updatedUser.hospitalId ? await find<Hospital>('hospitals', (entry) => entry.id === updatedUser.hospitalId) : undefined)
+      || (await find<Hospital>('hospitals', (entry) => entry.uid === user.uid));
     if (hospital) {
       const hospitalPatch: Partial<Hospital> = {};
       if (name) hospitalPatch.name = String(name).trim();

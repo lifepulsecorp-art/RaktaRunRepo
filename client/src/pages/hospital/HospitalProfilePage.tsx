@@ -177,6 +177,16 @@ export const HospitalProfilePage: React.FC = () => {
           </div>
         )}
 
+        {hospitalId && (
+          <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4 dark:border-sky-500/20 dark:bg-sky-500/5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-sky-800 dark:text-sky-300">Connected Hospital ID</p>
+            <p className="mt-1 font-mono text-sm font-bold text-slate-900 dark:text-white">{hospitalId}</p>
+            <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+              This account stays linked to this hospital. Blood bank details saved below update this hospital&apos;s record automatically.
+            </p>
+          </div>
+        )}
+
         {/* Profile Setup Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Section 1: Facility Information */}

@@ -34,9 +34,9 @@ export default function HomePage() {
         <section className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-50 px-6 py-12 shadow-sm sm:px-12 sm:py-16 lg:px-16 lg:py-20">
           <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-amber-200/40 blur-3xl" />
           <img
-            src="/raktarun-mark.png"
-            alt="RaktaRun blood-drop emblem"
-            className="pointer-events-none absolute right-8 top-1/2 hidden h-56 w-56 -translate-y-1/2 object-contain lg:block xl:right-12 xl:h-64 xl:w-64"
+            src="/raktarun-logo.jpeg"
+            alt="RaktaRun Emergency Blood Donor Network"
+            className="pointer-events-none absolute right-8 top-1/2 hidden h-56 w-64 -translate-y-1/2 rounded-xl bg-white object-contain lg:block xl:right-12 xl:h-64 xl:w-80"
             loading="lazy"
           />
           <div className="relative z-10 max-w-3xl space-y-6 lg:max-w-[calc(100%-18rem)]">
@@ -271,7 +271,7 @@ export default function HomePage() {
         {/* Footer */}
         <footer className="pt-8 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <RaktaRunLogo size="sm" subtitle="Emergency Blood Coordination Network" />
+            <RaktaRunLogo size="sm" />
             <div className="flex items-center gap-6">
               <Link to="/hero-wall" className="hover:text-slate-900 dark:hover:text-white transition">Heroes Wall</Link>
               <Link to="/register/hospital" className="hover:text-slate-900 dark:hover:text-white transition">Hospital Enrolment</Link>
