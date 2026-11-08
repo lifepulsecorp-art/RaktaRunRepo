@@ -120,7 +120,7 @@ export const DonorDashboardPage: React.FC = () => {
           if (permission === 'granted') {
             new Notification('RaktaRun Web Push Enabled', {
               body: 'You are now ready to receive real-time emergency blood requests on this device.',
-              icon: '/favicon.svg',
+              icon: '/favicon.png',
             });
           }
         } catch {
@@ -142,7 +142,7 @@ export const DonorDashboardPage: React.FC = () => {
       if (notifPrefs.push && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
         new Notification('RaktaRun Test Emergency Alert', {
           body: `Emergency dispatch test for ${roleData?.fullName || 'Donor'}. Priority: CODE RED Trauma.`,
-          icon: '/favicon.svg',
+          icon: '/favicon.png',
         });
       }
     } catch (err: any) {

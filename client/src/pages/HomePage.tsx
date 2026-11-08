@@ -34,12 +34,19 @@ export default function HomePage() {
         <section className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-50 px-6 py-12 shadow-sm sm:px-12 sm:py-16 lg:px-16 lg:py-20">
           <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-amber-200/40 blur-3xl" />
           <img
-            src="/raktarun-logo.jpeg"
+            src="/raktarun-logo.png"
             alt="RaktaRun Emergency Blood Donor Network"
-            className="pointer-events-none absolute right-8 top-1/2 hidden h-56 w-64 -translate-y-1/2 rounded-xl bg-white object-contain lg:block xl:right-12 xl:h-64 xl:w-80"
+            className="pointer-events-none absolute right-8 top-1/2 hidden h-64 w-80 -translate-y-1/2 object-contain lg:block dark:lg:hidden xl:right-12 xl:h-72 xl:w-96"
             loading="lazy"
           />
-          <div className="relative z-10 max-w-3xl space-y-6 lg:max-w-[calc(100%-18rem)]">
+          <img
+            src="/raktarun-logo-dark.png"
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none absolute right-8 top-1/2 hidden h-64 w-80 -translate-y-1/2 object-contain dark:lg:block xl:right-12 xl:h-72 xl:w-96"
+            loading="lazy"
+          />
+          <div className="relative z-10 max-w-3xl space-y-6 lg:max-w-[calc(100%-22rem)] xl:max-w-[calc(100%-28rem)]">
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-700/20 bg-emerald-700/5 px-3.5 py-1.5 text-xs font-bold tracking-wide text-emerald-800">
               <span className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse" />
               <span>A little care can go a long way</span>

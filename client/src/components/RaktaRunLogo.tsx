@@ -19,10 +19,10 @@ export const RaktaRunLogo: React.FC<RaktaRunLogoProps> = ({
   const label = firebaseUser && role ? 'Go to your dashboard' : 'Go to RaktaRun home';
 
   const sizeMap = {
-    sm: 'h-12 w-20',
-    md: 'h-16 w-24',
-    lg: 'h-24 w-36',
-    xl: 'h-32 w-48',
+    sm: 'h-14 w-24',
+    md: 'h-20 w-32',
+    lg: 'h-28 w-44',
+    xl: 'h-36 w-56',
   };
 
   return (
@@ -33,10 +33,16 @@ export const RaktaRunLogo: React.FC<RaktaRunLogoProps> = ({
       className={`inline-flex max-w-full select-none ${className}`}
     >
       <img
-        src="/raktarun-logo.jpeg"
+        src="/raktarun-logo.png"
         alt=""
         aria-hidden="true"
-        className={`${sizeMap[size]} max-w-full shrink-0 rounded-lg bg-white object-contain ${animate ? 'animate-heart-pulse' : ''}`}
+        className={`${sizeMap[size]} max-w-full shrink-0 object-contain dark:hidden ${animate ? 'animate-heart-pulse' : ''}`}
+      />
+      <img
+        src="/raktarun-logo-dark.png"
+        alt=""
+        aria-hidden="true"
+        className={`${sizeMap[size]} hidden max-w-full shrink-0 object-contain dark:block ${animate ? 'animate-heart-pulse' : ''}`}
       />
     </Link>
   );
