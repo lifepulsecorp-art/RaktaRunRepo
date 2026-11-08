@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { BRAND_TAGLINE } from '../constants/brand';
 import { RaktaRunLogo } from './RaktaRunLogo';
 import { ThemeToggle } from './ui/ThemeToggle';
 import {
@@ -55,9 +56,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
 
           <RaktaRunLogo size="md" />
+          <p className="hidden max-w-56 text-xs font-extrabold leading-snug tracking-wide text-slate-700 dark:text-slate-200 md:block xl:text-sm">
+            {BRAND_TAGLINE}
+          </p>
 
           {/* Regional network pill indicator */}
-          <div className="hidden xl:flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+          <div className="hidden 2xl:flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
             <span>Trauma Grid Live (Udupi & Mangaluru)</span>
           </div>

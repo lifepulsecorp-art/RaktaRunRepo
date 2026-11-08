@@ -11,6 +11,7 @@ import {
   Users,
 } from 'lucide-react';
 import { RaktaRunLogo } from '../components/RaktaRunLogo';
+import { BRAND_TAGLINE } from '../constants/brand';
 
 const COMPATIBILITY_DATA: Record<string, { canGiveTo: string[]; isUniversal?: boolean; note: string }> = {
   'O-': { canGiveTo: ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'], isUniversal: true, note: 'Universal Red Cell Hero! Vital in immediate trauma resuscitations.' },
@@ -42,6 +43,10 @@ export default function HomePage() {
               <span>A little care can go a long way</span>
             </div>
 
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-rose-700">
+              BLOOD. WHEN EVERY SECOND COUNTS
+            </p>
+
             <h1 className="max-w-3xl text-5xl font-extrabold leading-[0.98] tracking-[-0.065em] text-slate-900 sm:text-7xl lg:text-[5.5rem]">
               A little help,
               <br />
@@ -50,7 +55,12 @@ export default function HomePage() {
               <span className="text-rose-600">hope.</span>
             </h1>
 
+            <p className="text-lg font-extrabold tracking-tight text-emerald-900 sm:text-xl">
+              {BRAND_TAGLINE}
+            </p>
+
             <p className="max-w-xl text-base leading-7 text-slate-600 sm:text-lg">
+              <span className="font-bold text-slate-800">Making Emergency Donor Discovery Faster and Easier.</span>{' '}
               When someone needs blood, RaktaRun brings nearby donors and local hospitals together. It is simple to join, easy to use, and made for showing up when it matters.
             </p>
 
@@ -268,7 +278,12 @@ export default function HomePage() {
         {/* Footer */}
         <footer className="pt-8 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <RaktaRunLogo size="sm" />
+            <div className="flex items-center gap-3">
+              <RaktaRunLogo size="sm" />
+              <p className="max-w-48 text-[11px] font-bold leading-snug text-slate-600 dark:text-slate-300">
+                {BRAND_TAGLINE}
+              </p>
+            </div>
             <div className="flex items-center gap-6">
               <Link to="/hero-wall" className="hover:text-slate-900 dark:hover:text-white transition">Heroes Wall</Link>
               <Link to="/register/hospital" className="hover:text-slate-900 dark:hover:text-white transition">Hospital Enrolment</Link>
