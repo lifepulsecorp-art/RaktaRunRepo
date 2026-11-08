@@ -33,20 +33,10 @@ export default function HomePage() {
         {/* Hero Section */}
         <section className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-50 px-6 py-12 shadow-sm sm:px-12 sm:py-16 lg:px-16 lg:py-20">
           <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-amber-200/40 blur-3xl" />
-          <img
-            src="/raktarun-logo.png"
-            alt="RaktaRun Emergency Blood Donor Network"
-            className="pointer-events-none absolute right-8 top-1/2 hidden h-64 w-80 -translate-y-1/2 object-contain lg:block dark:lg:hidden xl:right-12 xl:h-72 xl:w-96"
-            loading="lazy"
-          />
-          <img
-            src="/raktarun-logo-dark.png"
-            alt=""
-            aria-hidden="true"
-            className="pointer-events-none absolute right-8 top-1/2 hidden h-64 w-80 -translate-y-1/2 object-contain dark:lg:block xl:right-12 xl:h-72 xl:w-96"
-            loading="lazy"
-          />
-          <div className="relative z-10 max-w-3xl space-y-6 lg:max-w-[calc(100%-22rem)] xl:max-w-[calc(100%-28rem)]">
+          <div className="pointer-events-none absolute right-8 top-1/2 hidden -translate-y-1/2 lg:block xl:right-12">
+            <RaktaRunLogo size="hero" theme="light" className="pointer-events-auto" />
+          </div>
+          <div className="relative z-10 max-w-3xl space-y-6 lg:max-w-[calc(100%-25rem)] xl:max-w-[calc(100%-29rem)]">
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-700/20 bg-emerald-700/5 px-3.5 py-1.5 text-xs font-bold tracking-wide text-emerald-800">
               <span className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse" />
               <span>A little care can go a long way</span>
@@ -115,13 +105,13 @@ export default function HomePage() {
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Certified by partner blood banks</p>
           </div>
 
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/60">
-            <div className="flex items-center gap-2 text-sky-500">
+          <div className="rounded-2xl border border-rose-300 bg-rose-50/80 p-5 shadow-md shadow-rose-950/5 ring-1 ring-rose-200/70 dark:border-rose-500/50 dark:bg-rose-950/30 dark:ring-rose-500/20">
+            <div className="flex items-center gap-2 text-rose-600 dark:text-rose-300">
               <Building2 className="h-5 w-5" />
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Trauma Centers</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-300">Trauma Centers</span>
             </div>
-            <p className="mt-2 text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-display">38 Units</p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Kasturba, AJ, Wenlock & network</p>
+            <p className="mt-2 text-2xl font-black text-slate-900 dark:text-white font-display sm:text-3xl">38 Units</p>
+            <p className="mt-1 text-xs text-rose-900/75 dark:text-rose-200/80">Kasturba, AJ, Wenlock & network</p>
           </div>
 
           <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800/80 dark:bg-slate-900/60">
@@ -284,7 +274,7 @@ export default function HomePage() {
               <Link to="/register/hospital" className="hover:text-slate-900 dark:hover:text-white transition">Hospital Enrolment</Link>
               <Link to="/login" className="hover:text-slate-900 dark:hover:text-white transition">Sign In</Link>
             </div>
-            <p>© 2026 RaktaRun. Udupi & Dakshina Kannada Emergency Health Grid.</p>
+            <p className="text-center sm:text-right">© 2026 RaktaRun, Inavyas Technologies Pvt Ltd</p>
           </div>
         </footer>
       </div>
