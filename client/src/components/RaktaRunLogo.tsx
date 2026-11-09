@@ -14,7 +14,7 @@ const sizeMap = {
   md: 'h-20 w-32',
   lg: 'h-28 w-44',
   xl: 'h-36 w-56',
-  hero: 'h-72 w-96',
+  hero: 'h-72 w-96 xl:h-[21rem] xl:w-[31.5rem]',
 } as const;
 
 export const RaktaRunLogo: React.FC<RaktaRunLogoProps> = ({

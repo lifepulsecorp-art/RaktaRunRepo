@@ -37,7 +37,7 @@ export default function HomePage() {
           <div className="pointer-events-none absolute right-8 top-1/2 hidden -translate-y-1/2 lg:block xl:right-12">
             <RaktaRunLogo size="hero" theme="light" className="pointer-events-auto" />
           </div>
-          <div className="relative z-10 max-w-3xl space-y-6 lg:max-w-[calc(100%-25rem)] xl:max-w-[calc(100%-29rem)]">
+          <div className="relative z-10 max-w-3xl space-y-6 lg:max-w-[calc(100%-25rem)] xl:max-w-[calc(100%-33rem)]">
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-700/20 bg-emerald-700/5 px-3.5 py-1.5 text-xs font-bold tracking-wide text-emerald-800">
               <span className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse" />
               <span>A little care can go a long way</span>
