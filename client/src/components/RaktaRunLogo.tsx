@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 interface RaktaRunLogoProps {
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'hero';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'nav' | 'hero';
   theme?: 'auto' | 'light';
   animate?: boolean;
   className?: string;
@@ -14,6 +14,7 @@ const sizeMap = {
   md: 'h-20 w-32',
   lg: 'h-28 w-44',
   xl: 'h-36 w-56',
+  nav: 'h-20 w-32 min-[400px]:h-24 min-[400px]:w-40',
   hero: 'h-72 w-96 xl:h-[21rem] xl:w-[31.5rem]',
 } as const;
 

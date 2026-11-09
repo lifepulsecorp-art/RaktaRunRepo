@@ -42,7 +42,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/80 backdrop-blur-xl transition-colors duration-200 dark:border-slate-800/80 dark:bg-slate-950/80">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-3">
         {/* Left Section: Brand & Sidebar Toggle */}
-        <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-4">
           {showSidebarToggle && (
             <button
               type="button"
@@ -55,8 +55,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          <RaktaRunLogo size="md" />
-          <p className="hidden max-w-56 text-xs font-extrabold leading-snug tracking-wide text-slate-700 dark:text-slate-200 md:block xl:text-sm">
+          <RaktaRunLogo size="nav" />
+          <p className={`${showSidebarToggle ? 'w-16' : 'w-20'} min-w-0 text-[10px] font-extrabold leading-tight tracking-wide text-slate-900 dark:text-white max-[359px]:hidden min-[400px]:w-28 sm:w-auto sm:max-w-56 sm:text-xs md:text-sm`}>
             {BRAND_TAGLINE}
           </p>
 
