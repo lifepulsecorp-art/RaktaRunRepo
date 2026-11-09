@@ -14,7 +14,7 @@ const sizeMap = {
   md: 'h-20 w-32',
   lg: 'h-28 w-44',
   xl: 'h-36 w-56',
-  nav: 'h-20 w-32 min-[400px]:h-24 min-[400px]:w-40',
+  nav: 'h-20 w-32 min-[420px]:h-28 min-[420px]:w-44',
   hero: 'h-72 w-96 xl:h-[21rem] xl:w-[31.5rem]',
 } as const;
 
@@ -44,7 +44,7 @@ export const RaktaRunLogo: React.FC<RaktaRunLogoProps> = ({
       />
       {theme === 'auto' && (
         <img
-          src="/raktarun-logo-dark-upload.png"
+          src="/raktarun-logo-dark-crisp.png"
           alt=""
           aria-hidden="true"
           className={`${sizeMap[size]} hidden max-w-full shrink-0 object-contain dark:block ${animate ? 'animate-heart-pulse' : ''}`}
