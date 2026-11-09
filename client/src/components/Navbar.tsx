@@ -56,7 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
 
           <RaktaRunLogo size="nav" />
-          <p className={`${showSidebarToggle ? 'w-16 min-[400px]:w-28' : 'w-20 min-[400px]:w-28 min-[540px]:w-56 min-[540px]:text-sm'} min-w-0 text-[10px] font-extrabold leading-tight tracking-wide text-slate-900 dark:text-white max-[359px]:hidden sm:w-auto sm:max-w-56 sm:text-xs md:text-sm`}>
+          <p className={`${showSidebarToggle ? 'w-16 min-[400px]:w-28' : 'w-20 min-[400px]:w-28 min-[540px]:w-56 min-[540px]:text-sm'} hidden min-w-0 text-[10px] font-extrabold leading-tight tracking-wide text-slate-900 dark:text-white sm:block sm:w-auto sm:max-w-56 sm:text-xs md:text-sm`}>
             {BRAND_TAGLINE}
           </p>
 

@@ -289,7 +289,7 @@ export default function HomePage() {
               <Link to="/register/hospital" className="hover:text-slate-900 dark:hover:text-white transition">Hospital Enrolment</Link>
               <Link to="/login" className="hover:text-slate-900 dark:hover:text-white transition">Sign In</Link>
             </div>
-            <p className="text-center sm:text-right">© 2026 RaktaRun, Inavyas Technologies Pvt Ltd</p>
+            <p className="text-center sm:text-right">© 2026 RaktaRun, Invayas Technologies Pvt Ltd</p>
           </div>
         </footer>
       </div>
