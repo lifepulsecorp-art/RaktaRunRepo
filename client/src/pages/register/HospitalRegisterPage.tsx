@@ -11,6 +11,8 @@ import { PasswordInput } from '../../components/ui/PasswordInput';
 import EmailOtpVerification from '../../components/EmailOtpVerification';
 import { ArrowLeft, Building2, CheckCircle2, AlertCircle, MapPin } from 'lucide-react';
 import { getEmailValidationMessage } from '../../utils/emailValidation';
+import { getPasswordPolicyError, PASSWORD_POLICY_MESSAGE } from '../../utils/passwordPolicy';
+import { PIN_CODE_ERROR_MESSAGE } from '../../utils/pinCode';
 
 const inputClass = 'w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 transition shadow-sm';
 
@@ -58,6 +60,11 @@ export default function HospitalRegisterPage() {
       return;
     }
     setEmailError('');
+    const passwordError = getPasswordPolicyError(form.password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
     try {
       setLoading(true);
       await api.post('/auth/register', {
@@ -87,6 +94,8 @@ export default function HospitalRegisterPage() {
       licenseNumber: form.registrationNumber,
       registrationNumber: form.registrationNumber,
       address: form.address,
+      locality: form.locality,
+      pincode: form.pincode,
       district: form.locality.toLowerCase().includes('mangal') ? 'Dakshina Kannada' : 'Udupi',
       coordinates: { latitude: form.latitude, longitude: form.longitude },
       bloodBankContact: { name: form.contactName, phone: form.contactPhone, email: form.email },
@@ -164,6 +173,10 @@ export default function HospitalRegisterPage() {
             onInvalidCapture={(event) => {
               event.preventDefault();
               const field = event.target as HTMLInputElement;
+              if (field.name === 'pincode') {
+                setError(PIN_CODE_ERROR_MESSAGE);
+                return;
+              }
               const label = field.labels?.[0]?.textContent?.trim()
                 || field.parentElement?.querySelector('label')?.textContent?.trim()
                 || field.parentElement?.parentElement?.querySelector('label')?.textContent?.trim()
@@ -206,7 +219,7 @@ export default function HospitalRegisterPage() {
               </div>
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
-                  Password (min 8)
+                  Password
                 </label>
                 <PasswordInput
                   required
@@ -217,6 +230,7 @@ export default function HospitalRegisterPage() {
                   placeholder="••••••••"
                   className={inputClass}
                 />
+                <p className="mt-1.5 text-[11px] leading-4 text-slate-500 dark:text-slate-400">{PASSWORD_POLICY_MESSAGE}</p>
               </div>
             </div>
 
@@ -280,6 +294,7 @@ export default function HospitalRegisterPage() {
                 <input
                   required
                   type="text"
+                  name="pincode"
                   inputMode="numeric"
                   pattern="[0-9]{6}"
                   maxLength={6}

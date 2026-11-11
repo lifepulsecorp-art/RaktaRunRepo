@@ -100,6 +100,9 @@ router.post('/register', authenticate, async (req: AuthenticatedRequest, res) =>
   if (!name || !address) {
     return res.status(400).json({ error: 'Hospital name and address are required' });
   }
+  if (typeof pincode !== 'string' || !/^\d{6}$/.test(pincode.trim())) {
+    return res.status(400).json({ error: 'PIN Code must contain exactly 6 digits.' });
+  }
 
   // Check if hospital already exists for this UID
   let existing = (await find<Hospital>('hospitals', (h) => h.uid === req.user!.uid));

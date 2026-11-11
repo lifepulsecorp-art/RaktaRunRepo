@@ -1,4 +1,4 @@
-import { createHmac, randomInt, timingSafeEqual } from 'crypto';
+import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from 'crypto';
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -8,15 +8,40 @@ import { find, insert, remove, update } from '../utils/db.js';
 import type { EmailVerificationChallenge, User, Donor, Hospital, UserRole } from '../types.js';
 import { isEmailBlocked } from '../utils/accountRestrictions.js';
 import { sendEmailAlert } from '../services/notificationService.js';
+import { getPasswordPolicyError } from '../utils/passwordPolicy.js';
 
 const router = Router();
 const OTP_TTL_MS = 10 * 60 * 1000;
 const OTP_RESEND_DELAY_MS = 60 * 1000;
 const OTP_MAX_ATTEMPTS = 5;
+const PASSWORD_RESET_TTL_MS = 30 * 60 * 1000;
+const PASSWORD_RESET_COOLDOWN_MS = 60 * 1000;
+const PASSWORD_RESET_RESPONSE = 'If an account with that email exists, a password reset link has been sent.';
 
 function publicUser(user: User) {
-  const { passwordHash: _passwordHash, ...safeUser } = user;
+  const {
+    passwordHash: _passwordHash,
+    passwordResetTokenHash: _passwordResetTokenHash,
+    passwordResetExpiresAt: _passwordResetExpiresAt,
+    passwordResetRequestedAt: _passwordResetRequestedAt,
+    ...safeUser
+  } = user;
   return safeUser;
+}
+
+function passwordResetUrl(token: string): string {
+  const configuredBaseUrl = process.env.APP_BASE_URL?.trim() || 'https://raktarun.in';
+  let baseUrl = 'https://raktarun.in';
+  try {
+    const parsed = new URL(configuredBaseUrl);
+    const isLocalHttp = parsed.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(parsed.hostname);
+    if (parsed.protocol === 'https:' || isLocalHttp) baseUrl = parsed.origin;
+  } catch {
+    // Keep reset links on the known production origin if configuration is invalid.
+  }
+  const url = new URL('/reset-password', baseUrl);
+  url.searchParams.set('token', token);
+  return url.toString();
 }
 
 function otpDigest(email: string, code: string): string {
@@ -101,6 +126,93 @@ router.post('/login', async (req, res) => {
   res.json({ message: 'Login successful', token, user: publicUser(user), profile: roleData });
 });
 
+// POST /api/auth/password-reset/request - Email a one-time reset link without revealing account existence.
+router.post('/password-reset/request', async (req, res) => {
+  const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'Enter a valid email address.' });
+  }
+
+  try {
+    const user = await find<User>('users', (entry) => entry.email.toLowerCase() === email);
+    if (user?.passwordHash && user.emailVerified !== false) {
+      const lastRequestedAt = Date.parse(user.passwordResetRequestedAt || '');
+      if (!Number.isFinite(lastRequestedAt) || Date.now() - lastRequestedAt >= PASSWORD_RESET_COOLDOWN_MS) {
+        const token = randomBytes(32).toString('hex');
+        const now = Date.now();
+        const updated = await update<User>('users', user.uid, {
+          passwordResetTokenHash: createHash('sha256').update(token).digest('hex'),
+          passwordResetExpiresAt: new Date(now + PASSWORD_RESET_TTL_MS).toISOString(),
+          passwordResetRequestedAt: new Date(now).toISOString(),
+        });
+
+        if (updated) {
+          const resetUrl = passwordResetUrl(token);
+          const html = `
+            <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:28px;color:#172033;background:#fffdf8;border:1px solid #eadfce;border-radius:16px">
+              <p style="margin:0 0 8px;color:#a51e32;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase">RaktaRun account security</p>
+              <h1 style="margin:0 0 16px;font-size:24px;color:#172033">Reset your password</h1>
+              <p style="font-size:15px;line-height:1.6">Hello ${escapeHtml(user.name)}, use the secure link below to create a new password for your RaktaRun account.</p>
+              <p style="margin:24px 0;text-align:center"><a href="${resetUrl}" style="display:inline-block;padding:14px 22px;border-radius:10px;background:#c94f19;color:#fff;text-decoration:none;font-weight:700">Verify email and reset password</a></p>
+              <p style="font-size:13px;line-height:1.6;color:#526071">This link expires in 30 minutes and can be used once. If you did not request a reset, you can ignore this email.</p>
+              <p style="font-size:12px;line-height:1.6;color:#738093;word-break:break-all">If the button does not work, open: ${resetUrl}</p>
+              <hr style="border:0;border-top:1px solid #eadfce;margin:24px 0" />
+              <p style="margin:0;text-align:center;font-size:12px;color:#738093">RaktaRun • Emergency Blood Donor Network</p>
+            </div>`;
+          const delivery = await sendEmailAlert(user.email, user.name, 'Reset your RaktaRun password', html);
+          if (!delivery.success) {
+            console.error('[PASSWORD RESET EMAIL NOT SENT]', delivery.error || 'Unknown email delivery error');
+            const current = await find<User>('users', (entry) => entry.uid === user.uid);
+            if (current?.passwordResetTokenHash === createHash('sha256').update(token).digest('hex')) {
+              await update<User>('users', user.uid, {
+                passwordResetTokenHash: undefined,
+                passwordResetExpiresAt: undefined,
+                passwordResetRequestedAt: undefined,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    return res.status(202).json({ message: PASSWORD_RESET_RESPONSE });
+  } catch (error) {
+    console.error('[PASSWORD RESET REQUEST ERROR]', error);
+    return res.status(503).json({ error: 'Password reset is temporarily unavailable. Please try again later.' });
+  }
+});
+
+// POST /api/auth/password-reset/confirm - Consume a single-use link and update the account password.
+router.post('/password-reset/confirm', async (req, res) => {
+  const token = typeof req.body?.token === 'string' ? req.body.token.trim() : '';
+  const password = typeof req.body?.password === 'string' ? req.body.password : '';
+  const passwordError = getPasswordPolicyError(password);
+  if (passwordError) return res.status(400).json({ error: passwordError });
+  if (!/^[a-f0-9]{64}$/i.test(token)) {
+    return res.status(400).json({ error: 'This password reset link is invalid or expired. Request a new one.' });
+  }
+
+  try {
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const user = await find<User>('users', (entry) => entry.passwordResetTokenHash === tokenHash);
+    if (!user || !user.passwordResetExpiresAt || Date.parse(user.passwordResetExpiresAt) <= Date.now()) {
+      return res.status(400).json({ error: 'This password reset link is invalid or expired. Request a new one.' });
+    }
+
+    const updated = await update<User>('users', user.uid, {
+      passwordHash: await bcrypt.hash(password, 10),
+      passwordResetTokenHash: undefined,
+      passwordResetExpiresAt: undefined,
+      passwordResetRequestedAt: undefined,
+    });
+    if (!updated) return res.status(400).json({ error: 'This password reset link is invalid or expired. Request a new one.' });
+    return res.json({ message: 'Your password has been reset. You can now sign in.' });
+  } catch (error) {
+    console.error('[PASSWORD RESET CONFIRM ERROR]', error);
+    return res.status(503).json({ error: 'Could not reset the password right now. Please try again later.' });
+  }
+});
+
 // POST /api/auth/register - Existing signed-in users may finish onboarding; new users must verify email first.
 router.post('/register', async (req, res) => {
   const authHeader = req.headers.authorization;
@@ -121,9 +233,10 @@ router.post('/register', async (req, res) => {
   if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
     return res.status(400).json({ error: 'Enter a valid email address.' });
   }
-  if (typeof password !== 'string' || password.length < 8 || Buffer.byteLength(password, 'utf8') > 72) {
-    return res.status(400).json({ error: 'Password must be at least 8 characters and no more than 72 bytes.' });
-  }
+  const passwordError = typeof password === 'string'
+    ? getPasswordPolicyError(password)
+    : 'Enter a password.';
+  if (passwordError) return res.status(400).json({ error: passwordError });
   if (!['donor', 'hospital'].includes(role)) {
     return res.status(400).json({ error: 'Choose donor or hospital registration.' });
   }

@@ -40,6 +40,7 @@ Add these variables to the `api` service in Vercel for Preview and Production:
 - `ADMIN_PASSWORD` = the private password for the admin account; keep it as a server secret
 - `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and `FIREBASE_PRIVATE_KEY`
 - `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, and `BREVO_SENDER_NAME`
+- `APP_BASE_URL` = the public site origin used for secure password-reset links (for example, `https://raktarun.in`)
 - `ESCALATION_CRON_SECRET` (a long random value)
 - `GROQ_API_KEY` if certificate AI review is enabled
 

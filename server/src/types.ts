@@ -7,6 +7,9 @@ export interface User {
   name: string;
   emailVerified?: boolean;
   passwordHash?: string;
+  passwordResetTokenHash?: string;
+  passwordResetExpiresAt?: string;
+  passwordResetRequestedAt?: string;
   phone?: string;
   hospitalId?: string;
   donorId?: string;

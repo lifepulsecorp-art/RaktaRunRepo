@@ -10,6 +10,8 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { PasswordInput } from '../../components/ui/PasswordInput';
 import { getEmailValidationMessage } from '../../utils/emailValidation';
+import { getPasswordPolicyError, PASSWORD_POLICY_MESSAGE } from '../../utils/passwordPolicy';
+import { PIN_CODE_ERROR_MESSAGE } from '../../utils/pinCode';
 import { COUNTRY_CALLING_CODES } from '../../utils/countryCallingCodes';
 import {
   Building2,
@@ -169,6 +171,12 @@ export default function DonorRegisterPage() {
     }
     setEmailError('');
 
+    const passwordError = getPasswordPolicyError(form.password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
+
     const cleanFullName = form.fullName.trim();
     const cleanPhone = form.phone.trim();
     const cleanBloodGroup = form.bloodGroup.trim();
@@ -305,6 +313,10 @@ export default function DonorRegisterPage() {
             onInvalidCapture={(event) => {
               event.preventDefault();
               const field = event.target as HTMLInputElement;
+              if (field.name === 'pincode') {
+                setError(PIN_CODE_ERROR_MESSAGE);
+                return;
+              }
               const label = field.labels?.[0]?.textContent?.trim()
                 || field.parentElement?.querySelector('label')?.textContent?.trim()
                 || field.parentElement?.parentElement?.querySelector('label')?.textContent?.trim()
@@ -394,7 +406,7 @@ export default function DonorRegisterPage() {
               </div>
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
-                  Password (min 8)
+                  Password
                 </label>
                 <PasswordInput
                   required
@@ -405,6 +417,7 @@ export default function DonorRegisterPage() {
                   placeholder="••••••••"
                   className={inputClass}
                 />
+                <p className="mt-1.5 text-[11px] leading-4 text-slate-500 dark:text-slate-400">{PASSWORD_POLICY_MESSAGE}</p>
               </div>
             </div>
 
@@ -442,6 +455,7 @@ export default function DonorRegisterPage() {
                 <input
                   required
                   type="text"
+                  name="pincode"
                   inputMode="numeric"
                   pattern="[0-9]{6}"
                   maxLength={6}

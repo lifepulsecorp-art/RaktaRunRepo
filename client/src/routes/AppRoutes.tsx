@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 import HomePage from '../pages/HomePage';
 import LoginPage from '../pages/LoginPage';
@@ -21,6 +21,9 @@ import EmergencyRequestPage from '../pages/hospital/EmergencyRequestPage';
 import HeroWallPage from '../pages/HeroWallPage';
 import DonorHeroCardPage from '../pages/donor/DonorHeroCardPage';
 import BuddyPage from '../pages/BuddyPage';
+import ForgotPasswordPage from '../pages/ForgotPasswordPage';
+import ResetPasswordPage from '../pages/ResetPasswordPage';
+import NotFoundPage from '../pages/NotFoundPage';
 
 export default function AppRoutes() {
   return (
@@ -28,6 +31,8 @@ export default function AppRoutes() {
       {/* PUBLIC */}
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/register/donor" element={<PublicDonorRegisterPage />} />
       <Route path="/register/hospital" element={<HospitalRegisterPage />} />
@@ -63,7 +68,7 @@ export default function AppRoutes() {
       <Route path="/live-tracking/:requestId" element={<ProtectedRoute><LiveTrackingPage /></ProtectedRoute>} />
 
       {/* FALLBACK */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }

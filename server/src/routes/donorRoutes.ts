@@ -264,6 +264,9 @@ router.post('/register', authenticate, async (req: AuthenticatedRequest, res) =>
   if (!cleanName || !cleanPhone || !cleanBloodGroup) {
     return res.status(400).json({ error: 'Full name, phone, and blood group are required.' });
   }
+  if (typeof pincode !== 'string' || !/^\d{6}$/.test(pincode.trim())) {
+    return res.status(400).json({ error: 'PIN Code must contain exactly 6 digits.' });
+  }
 
   const existingDonor = (await find<Donor>('donors', (d) => d.uid === req.user!.uid));
   const certificateImage = certificateFileBase64
