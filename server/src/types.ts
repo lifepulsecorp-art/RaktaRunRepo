@@ -171,6 +171,7 @@ export interface Hospital {
   id: string;
   uid?: string;
   name: string;
+  facilityType?: 'hospital' | 'blood-bank';
   address: string;
   district: 'Udupi' | 'Dakshina Kannada';
   coordinates: Coordinates;

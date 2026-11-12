@@ -47,7 +47,7 @@ export const RaktaRunLogo: React.FC<RaktaRunLogoProps> = ({
           src="/raktarun-logo-dark-header.png"
           alt=""
           aria-hidden="true"
-          className={`${sizeMap[size]} hidden max-w-full shrink-0 object-contain dark:block ${animate ? 'animate-heart-pulse' : ''}`}
+          className={`${sizeMap[size]} hidden max-w-full shrink-0 rounded-xl object-contain dark:bg-slate-900/90 dark:p-1.5 dark:drop-shadow-md dark:block ${animate ? 'animate-heart-pulse' : ''}`}
         />
       )}
     </Link>

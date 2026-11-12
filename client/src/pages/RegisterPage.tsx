@@ -106,14 +106,14 @@ export default function RegisterPage() {
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 group-hover:scale-105 transition-transform">
                     <Building2 className="h-7 w-7" />
                   </div>
-                  <Badge variant="success">Healthcare Authority</Badge>
+                  <Badge variant="success">Hospital or Blood Bank</Badge>
                 </div>
 
                 <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                  Register Hospital
+                  Register a Healthcare Authority
                 </h2>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 mb-6 leading-relaxed">
-                  Register your medical institution, trauma center, or blood bank to broadcast emergency dispatches.
+                  Choose hospital or blood bank authority registration for your healthcare facility.
                 </p>
 
                 <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-2.5 mb-6">
@@ -134,7 +134,7 @@ export default function RegisterPage() {
 
               <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
                 <span className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1 transition-transform">
-                  Continue Hospital Setup <ArrowRight className="h-4 w-4" />
+                  Choose Registration Type <ArrowRight className="h-4 w-4" />
                 </span>
                 <span className="text-[11px] text-slate-500 font-medium">
                   Verified license required

@@ -88,6 +88,7 @@ router.post('/', authenticate, async (req: AuthenticatedRequest, res) => {
 router.post('/register', authenticate, async (req: AuthenticatedRequest, res) => {
   const {
     name,
+    facilityType,
     registrationNumber,
     address,
     locality,
@@ -112,6 +113,7 @@ router.post('/register', authenticate, async (req: AuthenticatedRequest, res) =>
   if (existing) {
     const updated = (await update<Hospital>('hospitals', existing.id, {
       name,
+      facilityType: facilityType === 'blood-bank' ? 'blood-bank' : 'hospital',
       registrationNumber: registrationNumber || existing.registrationNumber,
       address: `${address}, ${locality || ''} - ${pincode || ''}`.trim(),
     }));
@@ -126,6 +128,7 @@ router.post('/register', authenticate, async (req: AuthenticatedRequest, res) =>
     id: hospitalId,
     uid: req.user!.uid,
     name,
+    facilityType: facilityType === 'blood-bank' ? 'blood-bank' : 'hospital',
     address: `${address}, ${locality || ''} ${pincode ? '- ' + pincode : ''}`.trim(),
     district,
     coordinates: {

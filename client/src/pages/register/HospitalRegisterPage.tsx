@@ -9,12 +9,20 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { PasswordInput } from '../../components/ui/PasswordInput';
 import EmailOtpVerification from '../../components/EmailOtpVerification';
-import { ArrowLeft, Building2, CheckCircle2, AlertCircle, MapPin } from 'lucide-react';
+import { ArrowLeft, Building2, CheckCircle2, AlertCircle, Droplet } from 'lucide-react';
 import { getEmailValidationMessage } from '../../utils/emailValidation';
 import { getPasswordPolicyError, PASSWORD_POLICY_MESSAGE } from '../../utils/passwordPolicy';
 import { PIN_CODE_ERROR_MESSAGE } from '../../utils/pinCode';
 
 const inputClass = 'w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 transition shadow-sm';
+
+type FacilityType = 'hospital' | 'blood-bank';
+
+const locationPresets = {
+  Manipal: { latitude: 13.3524, longitude: 74.7927 },
+  Mangaluru: { latitude: 12.9141, longitude: 74.856 },
+  Udupi: { latitude: 13.3409, longitude: 74.7421 },
+} as const;
 
 export default function HospitalRegisterPage() {
   const { role, refreshProfile } = useAuth();
@@ -24,6 +32,7 @@ export default function HospitalRegisterPage() {
   const errorRef = useRef<HTMLDivElement>(null);
   const [done, setDone] = useState(false);
   const [otpStep, setOtpStep] = useState(false);
+  const [facilityType, setFacilityType] = useState<FacilityType>('hospital');
   const [form, setForm] = useState({
     email: '',
     password: '',
@@ -34,8 +43,6 @@ export default function HospitalRegisterPage() {
     pincode: '',
     contactName: '',
     contactPhone: '',
-    bloodBankName: '',
-    bloodBankPhone: '',
     latitude: 13.3524,
     longitude: 74.7927,
   });
@@ -47,8 +54,8 @@ export default function HospitalRegisterPage() {
 
   const update = (k: string, v: any) => setForm({ ...form, [k]: v });
 
-  const setPreset = (lat: number, lng: number, locality: string) => {
-    setForm((f) => ({ ...f, latitude: lat, longitude: lng, locality }));
+  const setLocality = (locality: keyof typeof locationPresets) => {
+    setForm((f) => ({ ...f, ...locationPresets[locality], locality }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -91,13 +98,14 @@ export default function HospitalRegisterPage() {
     localStorage.setItem('lifepulse_token', token);
     await api.post('/hospitals/register', {
       name: form.name,
+      facilityType,
       licenseNumber: form.registrationNumber,
       registrationNumber: form.registrationNumber,
       address: form.address,
       locality: form.locality,
       pincode: form.pincode,
-      district: form.locality.toLowerCase().includes('mangal') ? 'Dakshina Kannada' : 'Udupi',
-      coordinates: { latitude: form.latitude, longitude: form.longitude },
+      location: { latitude: form.latitude, longitude: form.longitude },
+      contactPerson: { name: form.contactName, phone: form.contactPhone },
       bloodBankContact: { name: form.contactName, phone: form.contactPhone, email: form.email },
     });
     await refreshProfile();
@@ -144,14 +152,14 @@ export default function HospitalRegisterPage() {
           <div className={`flex min-w-0 flex-col items-start sm:flex-row sm:items-start sm:justify-between ${otpStep ? 'mb-3 gap-1.5' : 'mb-5 gap-2 sm:mb-6'}`}>
             <div className="min-w-0">
               <h1 className={`break-words font-bold leading-tight tracking-tight text-slate-900 dark:text-white ${otpStep ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'}`}>
-                Hospital Authority Registration
+                {facilityType === 'hospital' ? 'Hospital Authority Registration' : 'Blood Bank Authority Registration'}
               </h1>
               <p className={`mt-1 text-slate-600 dark:text-slate-400 ${otpStep ? 'text-[11px] leading-4 sm:text-xs' : 'text-xs sm:text-sm'}`}>
                 Your medical center will be reviewed by a RaktaRun administrator before emergency broadcast permissions are activated.
               </p>
             </div>
             <Badge variant="success" className="inline-flex max-w-full shrink-0 gap-1 whitespace-nowrap">
-              <Building2 className="h-3 w-3" /> Healthcare Portal
+              {facilityType === 'hospital' ? <Building2 className="h-3 w-3" /> : <Droplet className="h-3 w-3" />} Healthcare Portal
             </Badge>
           </div>
 
@@ -194,6 +202,31 @@ export default function HospitalRegisterPage() {
             }}
             className="space-y-4"
           >
+            <fieldset>
+              <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400">
+                Register authority for
+              </legend>
+              <div className="grid grid-cols-2 gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-1.5 dark:border-slate-800 dark:bg-slate-950/60">
+                {([
+                  { value: 'hospital', label: 'Hospital', Icon: Building2 },
+                  { value: 'blood-bank', label: 'Blood Bank', Icon: Droplet },
+                ] as const).map(({ value, label, Icon }) => {
+                  const selected = facilityType === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => setFacilityType(value)}
+                      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition ${selected ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-600 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-900'}`}
+                    >
+                      <Icon className="h-4 w-4" /> {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
@@ -237,25 +270,25 @@ export default function HospitalRegisterPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
-                  Hospital Name
+                  {facilityType === 'hospital' ? 'Hospital Name' : 'Blood Bank Name'}
                 </label>
                 <input
                   required
                   value={form.name}
                   onChange={(e) => update('name', e.target.value)}
-                  placeholder="Kasturba Hospital, Manipal"
+                  placeholder={facilityType === 'hospital' ? 'Kasturba Hospital, Manipal' : 'District Blood Bank, Udupi'}
                   className={inputClass}
                 />
               </div>
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
-                  Clinical License #
+                  {facilityType === 'hospital' ? 'Hospital Registration / License ID' : 'Blood Bank License / ID'}
                 </label>
                 <input
                   required
                   value={form.registrationNumber}
                   onChange={(e) => update('registrationNumber', e.target.value)}
-                  placeholder="REG-KA-2026-904"
+                  placeholder={facilityType === 'hospital' ? 'Hospital license or registration ID' : 'Blood bank license or registration ID'}
                   className={inputClass}
                 />
               </div>
@@ -263,7 +296,7 @@ export default function HospitalRegisterPage() {
 
             <div>
               <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
-                Physical Street Address
+                Street Address
               </label>
               <input
                 required
@@ -279,13 +312,15 @@ export default function HospitalRegisterPage() {
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
                   Locality / City
                 </label>
-                <input
+                <select
                   required
                   value={form.locality}
-                  onChange={(e) => update('locality', e.target.value)}
-                  placeholder="Manipal"
+                  onChange={(e) => setLocality(e.target.value as keyof typeof locationPresets)}
                   className={inputClass}
-                />
+                >
+                  <option value="" disabled>Select city</option>
+                  {Object.keys(locationPresets).map((city) => <option key={city} value={city}>{city}</option>)}
+                </select>
               </div>
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
@@ -306,84 +341,30 @@ export default function HospitalRegisterPage() {
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-2">
-                Coordinates & Preset Location
-              </label>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPreset(13.3524, 74.7927, 'Manipal')}
-                  className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-medium text-slate-700 dark:text-slate-300 hover:border-rose-500 hover:text-slate-900 dark:hover:text-white transition shadow-sm inline-flex items-center gap-1.5"
-                >
-                  <MapPin className="h-3 w-3 text-rose-500" /> Manipal (13.3524, 74.7927)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPreset(12.9141, 74.8560, 'Mangaluru')}
-                  className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-medium text-slate-700 dark:text-slate-300 hover:border-rose-500 hover:text-slate-900 dark:hover:text-white transition shadow-sm inline-flex items-center gap-1.5"
-                >
-                  <MapPin className="h-3 w-3 text-rose-500" /> Mangaluru (12.9141, 74.8560)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPreset(13.3409, 74.7421, 'Udupi')}
-                  className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-medium text-slate-700 dark:text-slate-300 hover:border-rose-500 hover:text-slate-900 dark:hover:text-white transition shadow-sm inline-flex items-center gap-1.5"
-                >
-                  <MapPin className="h-3 w-3 text-rose-500" /> Udupi (13.3409, 74.7421)
-                </button>
-              </div>
-            </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
-                  Contact Person
+                  Authority Contact
                 </label>
                 <input
                   required
                   value={form.contactName}
                   onChange={(e) => update('contactName', e.target.value)}
-                  placeholder="Dr. Anand Kumar"
+                  placeholder="Contact person name"
                   className={inputClass}
                 />
               </div>
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
-                  Official Phone
+                  Contact Phone
                 </label>
                 <input
                   required
                   value={form.contactPhone}
                   onChange={(e) => update('contactPhone', e.target.value)}
-                  placeholder="+918202922761"
-                  className={inputClass}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
-                  Blood Bank Incharge
-                </label>
-                <input
-                  required
-                  value={form.bloodBankName}
-                  onChange={(e) => update('bloodBankName', e.target.value)}
-                  placeholder="Dr. Ramesh Shenoy"
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
-                  Blood Bank Hotline
-                </label>
-                <input
-                  required
-                  value={form.bloodBankPhone}
-                  onChange={(e) => update('bloodBankPhone', e.target.value)}
-                  placeholder="+918202922762"
+                  type="tel"
+                  autoComplete="tel"
+                  placeholder="+91 82029 22761"
                   className={inputClass}
                 />
               </div>
@@ -396,7 +377,7 @@ export default function HospitalRegisterPage() {
                 isLoading={loading}
                 className="w-full py-3.5 text-sm font-bold shadow-lg shadow-rose-600/25"
               >
-                Register Hospital Authority
+                {facilityType === 'hospital' ? 'Register Hospital Authority' : 'Register Blood Bank Authority'}
               </Button>
             </div>
           </form>}
