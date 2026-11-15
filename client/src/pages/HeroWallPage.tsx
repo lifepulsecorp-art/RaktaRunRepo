@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Award, Share2, Camera, Sparkles, Lock } from 'lucide-react';
+import { Award, Share2, Camera, Sparkles, Lock, MapPin, HeartPulse, ShieldCheck, Users, ArrowUpRight, Droplets } from 'lucide-react';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { AppLayout } from '../components/AppLayout';
 import { Badge } from '../components/ui/Badge';
 import { Card } from '../components/ui/Card';
 
-type Hero = { id: string; displayName: string; district: string; bloodGroup: string; donations: number; responses: number; badges: string[] };
+type Hero = { id: string; displayName: string; district: string; bloodGroup: string; donations: number; responses: number; badges: string[]; profilePhotoUrl?: string | null };
 
 const BADGE_LABELS: Record<string, { label: string; icon: string }> = {
   life_pulse_hero: { label: 'RaktaRun Hero', icon: '✦' },
@@ -147,12 +147,16 @@ export default function HeroWallPage() {
   const { profile, role } = useAuth();
   const [heroes, setHeroes] = useState<Hero[]>([]);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     api.get('/heroes')
       .then(({ data }) => setHeroes(data.heroes))
-      .catch(() => setError('Hero profiles are temporarily unavailable.'));
+      .catch(() => setError('Hero profiles are temporarily unavailable.'))
+      .finally(() => setIsLoading(false));
   }, []);
+
+  const totals = heroes.reduce((sum, hero) => ({ donations: sum.donations + hero.donations, responses: sum.responses + hero.responses }), { donations: 0, responses: 0 });
 
   const downloadCard = (hero: Hero, format: 'landscape' | 'story') => {
     if (!profile) {
@@ -195,20 +199,47 @@ export default function HeroWallPage() {
       actions={headerActions}
       withSidebar={Boolean(profile)}
     >
-      <div className="max-w-6xl mx-auto space-y-8">
-        <div className="max-w-3xl space-y-2">
-          <Badge variant="destructive" className="uppercase tracking-wider">Verified Emergency Donors</Badge>
-          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Every minute matters. These heroes responded.
-          </h2>
-          <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
-            Recognizing donors based on verified emergency actions, not gamified points. Donors appear here only with explicit consent. Exact locations and contact numbers remain completely private.
-          </p>
-        </div>
+      <div className="relative mx-auto max-w-7xl space-y-8 overflow-hidden rounded-[2rem] px-1 py-2 sm:px-3">
+        <div className="pointer-events-none absolute -right-24 top-0 h-80 w-80 rounded-full bg-rose-300/30 blur-3xl dark:bg-rose-500/20" />
+        <div className="pointer-events-none absolute -left-28 top-72 h-72 w-72 rounded-full bg-orange-200/40 blur-3xl dark:bg-amber-500/10" />
+
+        <section className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-gradient-to-br from-white/80 via-rose-50/75 to-orange-100/50 p-6 shadow-[0_24px_90px_-45px_rgba(190,65,56,0.55)] backdrop-blur-2xl dark:border-white/10 dark:from-slate-900/75 dark:via-rose-950/35 dark:to-slate-900/65 sm:p-10">
+          <div className="absolute -right-8 -top-16 h-64 w-64 rounded-full border border-white/50 bg-white/20 blur-[1px] dark:border-white/10" />
+          <div className="relative grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center gap-2 rounded-full border border-rose-200/70 bg-white/55 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-rose-700 shadow-sm backdrop-blur-xl dark:border-rose-300/15 dark:bg-white/5 dark:text-rose-200">
+                <Sparkles className="h-3.5 w-3.5" /> People who showed up
+              </div>
+              <h2 className="mt-5 text-4xl font-black leading-[1.04] tracking-[-0.06em] text-slate-900 dark:text-white sm:text-6xl">
+                Real people.<br /><span className="bg-gradient-to-r from-rose-600 via-orange-500 to-amber-500 bg-clip-text text-transparent dark:from-rose-300 dark:via-orange-200 dark:to-amber-200">Extraordinary impact.</span>
+              </h2>
+              <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300 sm:text-base">
+                Meet screened donors whose verified donations and emergency responses have helped their communities. Every profile is shared with the donor’s permission.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/55 px-3 py-2 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5"><ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-300" /> Verified impact</span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/55 px-3 py-2 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5"><Lock className="h-3.5 w-3.5 text-rose-600 dark:text-rose-300" /> Privacy first</span>
+              </div>
+            </div>
+            <div className="relative mx-auto flex w-full max-w-sm items-center justify-center py-3">
+              <div className="absolute h-64 w-64 rounded-full bg-gradient-to-br from-rose-300/60 via-orange-200/50 to-amber-100/40 blur-2xl dark:from-rose-500/25 dark:via-orange-400/15 dark:to-transparent" />
+              <div className="relative rotate-[-5deg] rounded-[2rem] border border-white/80 bg-white/50 p-5 shadow-[0_25px_65px_-30px_rgba(100,35,35,0.55)] backdrop-blur-2xl dark:border-white/15 dark:bg-white/10">
+                <div className="flex items-center gap-3 rounded-2xl border border-white/70 bg-white/60 p-3 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/30">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-orange-400 text-white shadow-lg shadow-rose-500/25"><HeartPulse className="h-7 w-7" /></div>
+                  <div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-rose-600 dark:text-rose-300">Community heroes</p><p className="mt-1 text-lg font-black text-slate-900 dark:text-white">Impact, made human.</p></div>
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl border border-white/70 bg-white/45 p-4 backdrop-blur-xl dark:border-white/10 dark:bg-white/5"><Droplets className="h-4 w-4 text-rose-600 dark:text-rose-300" /><p className="mt-3 text-xs text-slate-500 dark:text-slate-400">Verified donations</p><p className="text-sm font-bold text-slate-900 dark:text-white">{totals.donations.toLocaleString()} given</p></div>
+                  <div className="rounded-2xl border border-white/70 bg-white/45 p-4 backdrop-blur-xl dark:border-white/10 dark:bg-white/5"><Users className="h-4 w-4 text-orange-600 dark:text-orange-300" /><p className="mt-3 text-xs text-slate-500 dark:text-slate-400">Emergency responses</p><p className="text-sm font-bold text-slate-900 dark:text-white">{totals.responses.toLocaleString()} answered</p></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Private Portal Callout Banner for Donors */}
         {role === 'donor' && (
-          <div className="rounded-2xl border border-rose-200 dark:border-rose-500/30 bg-rose-50/80 dark:bg-rose-950/20 p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+          <div className="liquid-glass relative overflow-hidden rounded-2xl border border-rose-200/70 p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg shadow-rose-950/5 dark:border-rose-300/15">
             <div className="flex items-center gap-3.5">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-600/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400">
                 <Sparkles className="h-5 w-5" />
@@ -229,55 +260,60 @@ export default function HeroWallPage() {
 
         {/* Public Visitor Notice */}
         {!profile && (
-          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 shadow-sm">
+          <div className="liquid-glass rounded-xl border border-white/70 p-4 flex items-center justify-between text-xs text-slate-600 dark:border-white/10 dark:text-slate-400">
             <span>Viewing public community wall. To download verified high-res shareable post cards, please log in.</span>
             <Link to="/login" className="text-rose-600 dark:text-rose-400 font-semibold hover:underline ml-2">Login here →</Link>
           </div>
         )}
 
-        {error && <p role="alert" className="rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 p-4 text-sm text-rose-800 dark:text-rose-300">{error}</p>}
-        {!error && heroes.length === 0 && (
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-12 text-center text-slate-500 dark:text-slate-400">
-            No donors have completed an emergency dispatch and opted in yet.
+        <div className="relative flex flex-wrap items-end justify-between gap-3 px-1">
+          <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-rose-600 dark:text-rose-300">The people behind the impact</p><h3 className="mt-1 text-2xl font-black tracking-tight text-slate-900 dark:text-white">Community Heroes</h3></div>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Real stories. Verified contributions.</p>
+        </div>
+        {error && <p role="alert" className="liquid-glass rounded-xl border border-rose-200/70 p-4 text-sm text-rose-800 dark:border-rose-400/20 dark:text-rose-300">{error}</p>}
+        {isLoading && <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" aria-label="Loading community heroes">{[0, 1, 2].map((item) => <div key={item} className="liquid-glass h-64 animate-pulse rounded-[1.75rem] border border-white/70 dark:border-white/10" />)}</div>}
+        {!isLoading && !error && heroes.length === 0 && (
+          <div className="liquid-glass relative overflow-hidden rounded-[2rem] border border-white/70 p-10 text-center shadow-xl dark:border-white/10 sm:p-16">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-rose-500 to-orange-400 text-white shadow-lg shadow-rose-600/20"><Award className="h-8 w-8" /></div>
+            <h4 className="mt-5 text-xl font-black text-slate-900 dark:text-white">The wall is ready for its first story.</h4>
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600 dark:text-slate-400">Donors who complete a verified donation and choose public recognition will appear here.</p>
+            {!profile && <Link to="/register/donor" className="mt-5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-rose-600 to-orange-500 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-rose-600/20 transition hover:-translate-y-0.5">Become a donor <ArrowUpRight className="h-4 w-4" /></Link>}
           </div>
         )}
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {heroes.map((hero) => (
-            <Card key={hero.id} className="p-6 flex flex-col justify-between hover:shadow-lg transition-shadow">
-              <div>
-                <div className="flex items-center justify-between">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20">
-                    <Award className="h-6 w-6" />
+            <Card key={hero.id} className="group relative flex flex-col justify-between overflow-hidden rounded-[1.75rem] border border-white/80 bg-white/45 p-0 shadow-[0_18px_55px_-32px_rgba(93,41,33,0.5)] backdrop-blur-2xl transition duration-500 hover:-translate-y-1.5 hover:shadow-[0_28px_70px_-35px_rgba(190,65,56,0.45)] dark:border-white/10 dark:bg-slate-900/45">
+              <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-rose-300/25 blur-3xl transition group-hover:bg-orange-300/30 dark:bg-rose-500/10" />
+              <div className="relative p-5 sm:p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3.5">
+                    <div className="relative h-[4.5rem] w-[4.5rem] shrink-0 rounded-[1.5rem] bg-gradient-to-br from-rose-500 via-orange-400 to-amber-300 p-[3px] shadow-lg shadow-rose-600/15">
+                      <div className="h-full w-full overflow-hidden rounded-[1.32rem] bg-white/80 dark:bg-slate-800">
+                        {hero.profilePhotoUrl ? <img src={hero.profilePhotoUrl} alt={`${hero.displayName} profile`} loading="lazy" className="h-full w-full object-cover transition duration-700 group-hover:scale-110" /> : <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-rose-100 to-orange-100 text-2xl font-black text-rose-700 dark:from-rose-950 dark:to-orange-950 dark:text-rose-200">{hero.displayName.slice(0, 1).toUpperCase()}</div>}
+                      </div>
+                      <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-emerald-500 text-white shadow dark:border-slate-900"><ShieldCheck className="h-3.5 w-3.5" /></span>
+                    </div>
+                    <div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-rose-600 dark:text-rose-300">Verified donor</p><h4 className="mt-1 truncate text-lg font-black tracking-tight text-slate-900 dark:text-white">{hero.displayName}</h4><p className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400"><MapPin className="h-3 w-3" />{hero.district} District</p></div>
                   </div>
-                  <Badge variant="destructive">{hero.bloodGroup}</Badge>
+                  <Badge variant="destructive" className="shrink-0 rounded-full px-3 py-1 font-black shadow-sm">{hero.bloodGroup}</Badge>
                 </div>
 
-                <h3 className="mt-4 text-xl font-bold tracking-tight text-slate-900 dark:text-white">{hero.displayName}</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{hero.district} District</p>
-
-                <div className="mt-4 flex items-baseline gap-2">
-                  <span className="text-3xl font-black text-emerald-600 dark:text-emerald-400">{hero.donations}</span>
-                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400">verified donations</span>
-                  <span className="text-slate-400">·</span>
-                  <span className="text-xs text-slate-600 dark:text-slate-400">{hero.responses} responses</span>
+                <div className="mt-6 grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl border border-white/80 bg-white/55 p-4 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5"><p className="text-2xl font-black tabular-nums text-emerald-700 dark:text-emerald-300">{hero.donations}</p><p className="mt-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">Verified donations</p></div>
+                  <div className="rounded-2xl border border-white/80 bg-white/55 p-4 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/5"><p className="text-2xl font-black tabular-nums text-orange-700 dark:text-orange-300">{hero.responses}</p><p className="mt-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">Emergency responses</p></div>
                 </div>
 
-                {/* Badges */}
-                <div className="mt-4 flex flex-wrap gap-1.5">
+                <div className="mt-4 flex min-h-8 flex-wrap gap-1.5">
                   {hero.badges.map((badge) => {
                     const info = BADGE_LABELS[badge] || { label: badge.replace(/_/g, ' '), icon: '✦' };
-                    return (
-                      <span key={badge} className="inline-flex items-center gap-1 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
-                        <span>{info.icon}</span> {info.label}
-                      </span>
-                    );
+                    return <span key={badge} className="inline-flex items-center gap-1 rounded-full border border-amber-300/50 bg-amber-100/55 px-2.5 py-1 text-[10px] font-bold text-amber-800 backdrop-blur-lg dark:border-amber-200/15 dark:bg-amber-300/10 dark:text-amber-200"><span>{info.icon}</span>{info.label}</span>;
                   })}
                 </div>
               </div>
 
               {/* Share / Download Actions: Authenticated vs Public Lock */}
-              <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800">
+              <div className="relative mt-auto border-t border-white/60 bg-white/25 p-4 backdrop-blur-xl dark:border-white/10 dark:bg-black/10">
                 {profile ? (
                   <div className="space-y-2">
                     <button
