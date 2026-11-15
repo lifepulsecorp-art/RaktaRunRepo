@@ -420,10 +420,20 @@ router.post('/:id/requests/:requestId/matches/:matchId/complete', authenticate, 
   const completion = completeDonation(match, donor, request.component);
   const updated = (await update<Match>('matches', match.id, completion.matchPatch));
   (await update<Donor>('donors', donor.id, completion.donorPatch));
+  // Remove any other open alerts immediately; new requests are also filtered by lastDonationDate.
+  for (const pending of await filter<Match>('matches', (entry) => entry.donorId === donor.id
+    && entry.id !== match.id && ['pending_alert', 'alerted'].includes(entry.status))) {
+    await update<Match>('matches', pending.id, {
+      status: 'expired',
+      donorCurrentLocation: null,
+      etaSeconds: null,
+      distanceRemaining: null,
+    });
+  }
   const stillNeeded = (await filter<Match>('matches', (m) => m.requestId === request.id && m.status === 'donated')).length;
   if (stillNeeded >= request.unitsRequired) (await update<BloodRequest>('bloodRequests', request.id, { status: 'fulfilled' }));
   await audit(req, 'donation.completed', 'match', match.id, { requestId: request.id });
-  res.json({ message: 'Donation marked complete; location sharing stopped', match: updated });
+  res.json({ message: 'Donation marked complete; donor record updated and other open alerts expired', match: updated });
 });
 
 router.post('/:id/requests/:requestId/unfulfilled', authenticate, authorizeRoles('hospital', 'admin'), async (req: AuthenticatedRequest, res) => {

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import {
   type User as FirebaseUser,
   onAuthStateChanged,
@@ -38,7 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [roleData, setRoleData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (): Promise<UserProfile | null> => {
+  const fetchProfile = useCallback(async (): Promise<UserProfile | null> => {
     try {
       const response = await api.get('/auth/me');
       const user = response.data.user as UserProfile;
@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setFirebaseUser(null);
       return null;
     }
-  };
+  }, []);
 
   useEffect(() => {
     const initAuth = async () => {

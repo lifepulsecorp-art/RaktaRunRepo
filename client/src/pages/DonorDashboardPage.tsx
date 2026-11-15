@@ -93,6 +93,23 @@ export const DonorDashboardPage: React.FC = () => {
     api.get('/donors/me').then(({ data }) => setProfilePhotoUrl(data.profilePhotoUrl || '')).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    const syncProfile = () => {
+      if (document.visibilityState === 'visible') void refreshProfile();
+    };
+    const timer = window.setInterval(syncProfile, 30_000);
+    window.addEventListener('focus', syncProfile);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener('focus', syncProfile);
+    };
+  }, [refreshProfile]);
+
+  useEffect(() => {
+    setExternalDonationDate(String(roleData?.lastDonationDate || '').slice(0, 10));
+    setDonationIntervalDays(roleData?.donationIntervalDays || 90);
+  }, [roleData?.lastDonationDate, roleData?.donationIntervalDays]);
+
   const uploadProfilePhoto = async (file?: File) => {
     if (!file) return;
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 3 * 1024 * 1024) {
