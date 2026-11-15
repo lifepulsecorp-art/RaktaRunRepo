@@ -275,6 +275,31 @@ export default function HomePage() {
           </div>
         </section>
 
+        <section className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900/70 sm:p-12">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-rose-500/10 blur-3xl" />
+          <div className="relative grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-[0.18em] text-rose-600 dark:text-rose-400">About RaktaRun</span>
+              <h2 className="mt-3 text-3xl font-black text-slate-900 dark:text-white sm:text-4xl">Built by students. Here for every neighbor.</h2>
+              <p className="mt-4 max-w-xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+                RaktaRun is an emergency blood donor network created by four NMAMIT students to help hospitals and nearby donors find each other faster across coastal Karnataka.
+              </p>
+              <Link to="/about" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-rose-700 dark:bg-white dark:text-slate-900 dark:hover:bg-rose-100">
+                Meet the founding team <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {['Maneesh Bailady', 'Pratheek S Shetty', 'Sudeep Shetty', 'Banish Devadiga'].map((name, index) => (
+                <div key={name} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/70">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-600/10 text-sm font-black text-rose-700 dark:text-rose-300">0{index + 1}</span>
+                  <p className="mt-3 text-sm font-bold text-slate-900 dark:text-white">{name}</p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Co-founder · NMAMIT</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Footer */}
         <footer className="pt-8 border-t border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -285,11 +310,12 @@ export default function HomePage() {
               </p>
             </div>
             <div className="flex items-center gap-6">
+              <Link to="/about" className="hover:text-slate-900 dark:hover:text-white transition">About</Link>
               <Link to="/hero-wall" className="hover:text-slate-900 dark:hover:text-white transition">Heroes Wall</Link>
               <Link to="/register/hospital" className="hover:text-slate-900 dark:hover:text-white transition">Hospital Enrolment</Link>
               <Link to="/login" className="hover:text-slate-900 dark:hover:text-white transition">Sign In</Link>
             </div>
-            <p className="text-center sm:text-right">© 2026 RaktaRun, Invayas Technologies Pvt Ltd</p>
+            <p className="text-center sm:text-right">© 2026 RaktaRun</p>
           </div>
         </footer>
       </div>

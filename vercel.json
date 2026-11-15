@@ -4,6 +4,7 @@
     "client": {
       "root": "client",
       "rewrites": [
+        { "source": "/about", "destination": "/index.html" },
         { "source": "/login", "destination": "/index.html" },
         { "source": "/register", "destination": "/index.html" },
         { "source": "/register/donor", "destination": "/index.html" },
@@ -11,6 +12,9 @@
         { "source": "/hero-wall", "destination": "/index.html" },
         { "source": "/forgot-password", "destination": "/index.html" },
         { "source": "/reset-password", "destination": "/index.html" },
+        { "source": "/buddy/:token", "destination": "/index.html" },
+        { "source": "/donor/:path*", "destination": "/index.html" },
+        { "source": "/hospital/:path*", "destination": "/index.html" },
         {
           "source": "/(.*)",
           "destination": "/index.html"

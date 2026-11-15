@@ -5,6 +5,7 @@ const TABLES: Record<string, string> = {
   hospitals: 'hospitals',
   donors: 'donors',
   bloodRequests: 'blood_requests',
+  bloodCamps: 'blood_camps',
   matches: 'matches',
   auditLogs: 'audit_logs',
   buddyLinks: 'buddy_links',

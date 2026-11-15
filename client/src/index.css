@@ -146,6 +146,18 @@ button, a { -webkit-tap-highlight-color: transparent; }
 @keyframes heart-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 .animate-heart-pulse { animation: heart-pulse 2s infinite ease-in-out; }
 
+.startup-logo-runner { animation: startup-run 1.8s ease-in-out infinite; }
+.startup-progress { animation: startup-progress 1.6s ease-in-out infinite; }
+@keyframes startup-run {
+  0%, 100% { transform: translateX(-14px) rotate(-1deg); }
+  50% { transform: translateX(14px) rotate(1deg); }
+}
+@keyframes startup-progress {
+  0% { width: 10%; transform: translateX(0); }
+  50% { width: 80%; transform: translateX(25%); }
+  100% { width: 10%; transform: translateX(900%); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }

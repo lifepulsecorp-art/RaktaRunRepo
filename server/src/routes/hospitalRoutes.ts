@@ -6,7 +6,7 @@ import type { Hospital, BloodRequest, Match, Donor, BloodGroup, BloodComponent, 
 import { findCandidates } from '../services/matching.js';
 import { completeDonation } from '../services/journey.js';
 import { getSystemConfig } from '../services/configService.js';
-import { dispatchAlertNotifications, sendRegistrationNotification } from '../services/notificationService.js';
+import { dispatchAlertNotifications, sendRegistrationNotification, sendPendingReviewNotification } from '../services/notificationService.js';
 
 const router = Router();
 
@@ -81,6 +81,13 @@ router.post('/', authenticate, async (req: AuthenticatedRequest, res) => {
   };
 
   (await insert<Hospital>('hospitals', newHospital));
+  sendPendingReviewNotification({
+    name: newHospital.bloodBankContact.name || newHospital.name,
+    email: req.user?.email,
+    role: 'hospital',
+    organizationName: newHospital.name,
+    facilityType: newHospital.facilityType,
+  }).catch((err) => console.warn('[ADMIN HEALTHCARE REVIEW NOTIFICATION ERROR]', err.message));
   res.status(201).json(newHospital);
 });
 
@@ -101,6 +108,10 @@ router.post('/register', authenticate, async (req: AuthenticatedRequest, res) =>
   if (!name || !address) {
     return res.status(400).json({ error: 'Hospital name and address are required' });
   }
+  if (!location || typeof location.latitude !== 'number' || typeof location.longitude !== 'number'
+    || location.latitude < -90 || location.latitude > 90 || location.longitude < -180 || location.longitude > 180) {
+    return res.status(400).json({ error: 'Capture a valid facility GPS location before registering.' });
+  }
   if (typeof pincode !== 'string' || !/^\d{6}$/.test(pincode.trim())) {
     return res.status(400).json({ error: 'PIN Code must contain exactly 6 digits.' });
   }
@@ -116,8 +127,20 @@ router.post('/register', authenticate, async (req: AuthenticatedRequest, res) =>
       facilityType: facilityType === 'blood-bank' ? 'blood-bank' : 'hospital',
       registrationNumber: registrationNumber || existing.registrationNumber,
       address: `${address}, ${locality || ''} - ${pincode || ''}`.trim(),
+      district: locality?.toLowerCase().includes('mangal') ? 'Dakshina Kannada' : 'Udupi',
+      coordinates: {
+        latitude: Math.round(location.latitude * 100000) / 100000,
+        longitude: Math.round(location.longitude * 100000) / 100000,
+      },
+      bloodBankContact: {
+        name: bloodBankContact?.name || contactPerson?.name || existing.bloodBankContact.name,
+        phone: bloodBankContact?.phone || contactPerson?.phone || existing.bloodBankContact.phone,
+        email: req.user!.email || existing.bloodBankContact.email,
+      },
     }));
     (await update<User>('users', req.user!.uid, { hospitalId: existing.id, role: 'hospital', name }));
+    sendPendingReviewNotification({ name, email: req.user?.email, role: 'hospital', organizationName: name, facilityType })
+      .catch((err) => console.warn('[ADMIN HEALTHCARE REVIEW NOTIFICATION ERROR]', err.message));
     return res.status(200).json({ hospital: updated || existing });
   }
 
@@ -132,8 +155,8 @@ router.post('/register', authenticate, async (req: AuthenticatedRequest, res) =>
     address: `${address}, ${locality || ''} ${pincode ? '- ' + pincode : ''}`.trim(),
     district,
     coordinates: {
-      latitude: location?.latitude || 13.3524,
-      longitude: location?.longitude || 74.7927,
+      latitude: Math.round(location.latitude * 100000) / 100000,
+      longitude: Math.round(location.longitude * 100000) / 100000,
     },
     verificationStatus: 'pending',
     bloodBankContact: {
@@ -157,6 +180,8 @@ router.post('/register', authenticate, async (req: AuthenticatedRequest, res) =>
     role: 'hospital',
     hospitalName: name,
   }).catch((err) => console.warn('[HOSPITAL REGISTRATION NOTIFICATION ERROR]', err.message));
+  sendPendingReviewNotification({ name, email: req.user?.email, role: 'hospital', organizationName: name, facilityType })
+    .catch((err) => console.warn('[ADMIN HEALTHCARE REVIEW NOTIFICATION ERROR]', err.message));
 
   res.status(201).json({ hospital: newHospital });
 });
@@ -392,7 +417,7 @@ router.post('/:id/requests/:requestId/matches/:matchId/complete', authenticate, 
   if (!match || !['accepted', 'en_route', 'reached'].includes(match.status)) return res.status(409).json({ error: 'Only an accepted donor can be marked as donated' });
   const donor = (await find<Donor>('donors', (d) => d.id === match.donorId));
   if (!donor) return res.status(404).json({ error: 'Donor not found' });
-  const completion = completeDonation(match, donor);
+  const completion = completeDonation(match, donor, request.component);
   const updated = (await update<Match>('matches', match.id, completion.matchPatch));
   (await update<Donor>('donors', donor.id, completion.donorPatch));
   const stillNeeded = (await filter<Match>('matches', (m) => m.requestId === request.id && m.status === 'donated')).length;

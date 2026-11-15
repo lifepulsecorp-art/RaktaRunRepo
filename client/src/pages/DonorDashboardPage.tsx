@@ -30,6 +30,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import LocationPickerModal from '../components/LocationPickerModal';
 import { AppLayout } from '../components/AppLayout';
+import { NearbyBloodCamps } from '../components/BloodCampPanels';
 
 const BADGE_MAP: Record<string, { label: string; icon: string }> = {
   life_pulse_hero: { label: 'RaktaRun Hero', icon: '✦' },
@@ -59,6 +60,13 @@ export const DonorDashboardPage: React.FC = () => {
   const [now, setNow] = useState(Date.now());
   const [consent, setConsent] = useState(Boolean(roleData?.publicHeroConsent));
   const [consentNotice, setConsentNotice] = useState('');
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string>('');
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoNotice, setPhotoNotice] = useState('');
+  const [externalDonationDate, setExternalDonationDate] = useState(String(roleData?.lastDonationDate || '').slice(0, 10));
+  const [donationIntervalDays, setDonationIntervalDays] = useState<number>(roleData?.donationIntervalDays || 90);
+  const [donationBusy, setDonationBusy] = useState(false);
+  const [donationNotice, setDonationNotice] = useState('');
 
   // Location picker modal state
   const [showLocationModal, setShowLocationModal] = useState(false);
@@ -78,6 +86,54 @@ export const DonorDashboardPage: React.FC = () => {
       console.error('Failed to load donor history', e);
     } finally {
       setLoadingHistory(false);
+    }
+  };
+
+  useEffect(() => {
+    api.get('/donors/me').then(({ data }) => setProfilePhotoUrl(data.profilePhotoUrl || '')).catch(() => {});
+  }, []);
+
+  const uploadProfilePhoto = async (file?: File) => {
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 3 * 1024 * 1024) {
+      setPhotoNotice('Choose a JPG, PNG, or WEBP image up to 3 MB.');
+      return;
+    }
+    setPhotoBusy(true);
+    setPhotoNotice('');
+    try {
+      const fileData = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const { data } = await api.post('/donors/me/photo', { fileName: file.name, fileData });
+      setProfilePhotoUrl(data.profilePhotoUrl || '');
+      setPhotoNotice('Profile photo updated.');
+    } catch (error: any) {
+      setPhotoNotice(error.response?.data?.error || 'Could not update the photo.');
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
+
+  const saveExternalDonation = async () => {
+    setDonationBusy(true);
+    setDonationNotice('');
+    try {
+      const { data } = await api.post('/donors/me/donation-history', {
+        donatedAt: externalDonationDate,
+        donationIntervalDays,
+        component: 'whole_blood',
+      });
+      setDonationNotice(data.message || 'Donation date saved.');
+      await refreshProfile();
+      if (showHistoryModal) await fetchHistory();
+    } catch (error: any) {
+      setDonationNotice(error.response?.data?.error || 'Could not save that donation date.');
+    } finally {
+      setDonationBusy(false);
     }
   };
 
@@ -363,6 +419,25 @@ export const DonorDashboardPage: React.FC = () => {
     >
       <div className="mx-auto max-w-7xl space-y-8">
 
+        <NearbyBloodCamps />
+
+        <section className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/70 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+          <div className="flex items-center gap-4">
+            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-rose-200 bg-rose-50 text-xl font-black text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
+              {profilePhotoUrl ? <img src={profilePhotoUrl} alt={`${roleData?.fullName || profile?.name || 'Donor'} profile`} className="h-full w-full object-cover" /> : (roleData?.fullName || profile?.name || 'D').slice(0, 1).toUpperCase()}
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">{roleData?.fullName || profile?.name || 'Donor profile'}</h2>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Add a photo to personalize your donor dashboard.</p>
+              {photoNotice && <p role="status" className="mt-1 text-xs text-rose-700 dark:text-rose-300">{photoNotice}</p>}
+            </div>
+          </div>
+          <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-300 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800">
+            <Camera className="h-4 w-4 text-rose-600 dark:text-rose-400" /> {photoBusy ? 'Uploading…' : 'Upload a photo'}
+            <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={photoBusy} onChange={(event) => { void uploadProfilePhoto(event.target.files?.[0]); event.target.value = ''; }} />
+          </label>
+        </section>
+
         {/* Active Donation Missions (En Route / In Transit) */}
         {activeMissions.length > 0 && (
           <div className="mt-6 space-y-4">
@@ -492,6 +567,34 @@ export const DonorDashboardPage: React.FC = () => {
             })}
           </div>
         )}
+
+        <section className="rounded-3xl border border-amber-200 bg-amber-50/70 p-5 dark:border-amber-900/50 dark:bg-amber-950/15 sm:p-6">
+          <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
+            <div>
+              <h2 className="flex items-center gap-2 text-base font-bold text-slate-900 dark:text-white"><Calendar className="h-5 w-5 text-amber-600 dark:text-amber-400" /> Donation history & readiness</h2>
+              <p className="mt-1 max-w-3xl text-xs leading-5 text-slate-600 dark:text-slate-300">If you donated outside RaktaRun, record the date here so the network can pause alerts during your recovery interval. Your blood bank confirms final eligibility.</p>
+              {roleData?.lastDonationDate && <p className="mt-2 text-xs font-semibold text-slate-700 dark:text-slate-200">Latest recorded donation: {new Date(roleData.lastDonationDate).toLocaleDateString('en-IN')}</p>}
+              {donationNotice && <p role="status" className="mt-2 text-xs font-semibold text-amber-800 dark:text-amber-300">{donationNotice}</p>}
+            </div>
+            <div className="grid gap-3 sm:grid-cols-[minmax(9rem,1fr)_minmax(12rem,1.2fr)_auto] lg:min-w-[38rem]">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Donation date
+                <input type="date" max={new Date().toISOString().slice(0, 10)} value={externalDonationDate} onChange={(event) => setExternalDonationDate(event.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white" />
+              </label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Whole blood interval
+                <select value={donationIntervalDays} onChange={(event) => setDonationIntervalDays(Number(event.target.value))} className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+                  <option value={90}>90 days</option>
+                  <option value={120}>120 days</option>
+                </select>
+              </label>
+              <button type="button" disabled={donationBusy || !externalDonationDate} onClick={() => void saveExternalDonation()} className="self-end rounded-xl bg-amber-600 px-4 py-3 text-xs font-bold text-white transition hover:bg-amber-700 disabled:opacity-50 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400">{donationBusy ? 'Saving…' : 'Record donation'}</button>
+            </div>
+          </div>
+          {roleData?.lastDonationDate && (
+            <p className="mt-4 border-t border-amber-200 pt-3 text-xs text-slate-600 dark:border-amber-900/60 dark:text-slate-300">
+              Estimated next eligible date: <strong className="text-slate-900 dark:text-white">{new Date(new Date(roleData.lastDonationDate).getTime() + (roleData.donationIntervalDays || donationIntervalDays) * 86400000).toLocaleDateString('en-IN')}</strong> · Based on a {roleData.donationIntervalDays || donationIntervalDays}-day interval.
+            </p>
+          )}
+        </section>
 
         {/* 3 Status Cards */}
         <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -1244,10 +1347,10 @@ export const DonorDashboardPage: React.FC = () => {
                           <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
                             item.matchStatus === 'donated' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20'
                           }`}>
-                            {item.matchStatus === 'donated' ? '✓ Donation Fulfilled' : 'Alert Answered'}
+                            {item.selfReported ? 'Self-reported' : item.matchStatus === 'donated' ? '✓ Donation Fulfilled' : 'Alert Answered'}
                           </span>
                           <span className="text-[11px] text-slate-500">
-                            Verified by: {item.verifiedBy || 'Dr. Medical Officer'}
+                            {item.selfReported ? 'Added by you' : `Verified by: ${item.verifiedBy || 'Medical Officer'}`}
                           </span>
                         </div>
                       </div>

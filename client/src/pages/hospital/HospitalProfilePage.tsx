@@ -12,6 +12,7 @@ import {
   FileText,
   AlertCircle,
   ArrowLeft,
+  LocateFixed,
 } from 'lucide-react';
 import { AppLayout } from '../../components/AppLayout';
 import { Badge } from '../../components/ui/Badge';
@@ -23,6 +24,8 @@ export const HospitalProfilePage: React.FC = () => {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [locationNotice, setLocationNotice] = useState('');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -47,8 +50,8 @@ export const HospitalProfilePage: React.FC = () => {
       setName(roleData.name || '');
       setDistrict(roleData.district || 'Udupi');
       setAddress(roleData.address || '');
-      setLatitude(roleData.coordinates?.latitude || 13.3535);
-      setLongitude(roleData.coordinates?.longitude || 74.7865);
+      setLatitude(roleData.coordinates?.latitude ?? 13.3535);
+      setLongitude(roleData.coordinates?.longitude ?? 74.7865);
       setContactName(roleData.bloodBankContact?.name || '');
       setContactPhone(roleData.bloodBankContact?.phone || '');
       setContactEmail(roleData.bloodBankContact?.email || '');
@@ -72,6 +75,28 @@ export const HospitalProfilePage: React.FC = () => {
       setLongitude(74.7421);
       setDistrict('Udupi');
     }
+  };
+
+  const captureFacilityLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationNotice('This browser does not support GPS location.');
+      return;
+    }
+    setLocating(true);
+    setLocationNotice('');
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setLatitude(coords.latitude);
+        setLongitude(coords.longitude);
+        setLocationNotice('Current GPS location captured.');
+        setLocating(false);
+      },
+      () => {
+        setLocationNotice('Allow browser location access and try again.');
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -253,6 +278,10 @@ export const HospitalProfilePage: React.FC = () => {
                       Udupi City
                     </button>
                   </div>
+                  <button type="button" onClick={captureFacilityLocation} disabled={locating} className="mt-2 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-rose-500/30 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 disabled:opacity-60 dark:bg-rose-500/10 dark:text-rose-300 dark:hover:bg-rose-500/20">
+                    <LocateFixed className="h-4 w-4" />{locating ? 'Locating…' : 'Use current facility GPS'}
+                  </button>
+                  {locationNotice && <p role="status" className="mt-1.5 text-[11px] text-rose-700 dark:text-rose-300">{locationNotice}</p>}
                 </div>
 
                 <div className="md:col-span-2">

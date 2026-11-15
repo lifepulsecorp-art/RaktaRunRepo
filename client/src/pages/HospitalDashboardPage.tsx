@@ -4,6 +4,7 @@ import { Send, History, X, Building2, Calendar, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../utils/api';
 import { AppLayout } from '../components/AppLayout';
+import { BloodCampManager } from '../components/BloodCampPanels';
 
 export const HospitalDashboardPage: React.FC = () => {
   const { roleData } = useAuth();
@@ -76,6 +77,8 @@ export const HospitalDashboardPage: React.FC = () => {
       }
     >
       <div className="mx-auto max-w-7xl space-y-6">
+
+        <BloodCampManager />
 
         <section className="mt-8">
           <div className="mb-4 flex items-center justify-between">

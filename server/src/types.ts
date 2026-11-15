@@ -147,6 +147,9 @@ export interface Donor {
   rhType: 'positive' | 'negative';
   bloodComponentEligibility: BloodComponent[];
   lastDonationDate: string | null;
+  donationIntervalDays?: 90 | 120;
+  donationHistory?: { id: string; donatedAt: string; source: 'external' | 'raktarun'; component: BloodComponent }[];
+  profilePhotoPath?: string;
   hemoglobinLevel: number;
   weight: number;
   eligibilityStatus: 'pending' | 'eligible' | 'temporary_deferral' | 'permanent_deferral';
@@ -217,6 +220,21 @@ export interface BloodRequest {
   };
   createdAt: string;
   updatedAt: string;
+}
+
+export interface BloodCamp {
+  id: string;
+  hospitalId: string;
+  hospitalName: string;
+  title: string;
+  message: string;
+  address: string;
+  coordinates: Coordinates;
+  radiusKm: 5 | 10;
+  startsAt: string;
+  endsAt?: string;
+  status: 'active' | 'cancelled';
+  createdAt: string;
 }
 
 export interface Match {

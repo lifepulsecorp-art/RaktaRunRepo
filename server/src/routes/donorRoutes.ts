@@ -7,8 +7,8 @@ import type { Donor, Match, BloodRequest, User, AuditLog, Hospital, BloodGroup }
 import { resolveDonorResponse, updateJourney } from '../services/journey.js';
 import { distanceKm } from '../services/matching.js';
 import { reviewCertificateWithAi } from '../services/certificateAiReview.js';
-import { uploadCertificate } from '../utils/supabase.js';
-import { sendSmsAlert, sendEmailAlert, sendRegistrationNotification } from '../services/notificationService.js';
+import { createCertificateSignedUrl, uploadCertificate } from '../utils/supabase.js';
+import { sendSmsAlert, sendEmailAlert, sendRegistrationNotification, sendPendingReviewNotification } from '../services/notificationService.js';
 
 const router = Router();
 const VALID_BLOOD_GROUPS: BloodGroup[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -58,10 +58,13 @@ async function expireStaleDonorAlerts(donor: Donor) {
     const request = (await find<BloodRequest>('bloodRequests', (entry) => entry.id === match.requestId));
     const distance = request ? distanceKm(request.hospitalLocation, donor.coordinates) : Number.POSITIVE_INFINITY;
     const outsideRadius = !request || distance > Math.min(request.radiusKm, donor.preferredRadius || request.radiusKm);
+    const intervalDays = donor.donationIntervalDays || 90;
+    const insideDonationDeferral = Boolean(donor.lastDonationDate)
+      && (Date.now() - Date.parse(donor.lastDonationDate || '')) / 86400000 < intervalDays;
     const criticalOnlyMismatch = Boolean(donor.notificationPreferences?.criticalOnly) && request?.urgency !== 'critical';
     const unavailable = donor.availabilityStatus === 'unavailable'
       || (donor.availabilityStatus === 'emergency_only' && request?.urgency !== 'critical');
-    if (outsideRadius || criticalOnlyMismatch || unavailable) {
+    if (outsideRadius || criticalOnlyMismatch || unavailable || insideDonationDeferral) {
       (await update<Match>('matches', match.id, { status: 'expired' }));
     }
   }
@@ -70,8 +73,8 @@ async function expireStaleDonorAlerts(donor: Donor) {
 // GET /api/donors - List all donors (hospital or admin)
 router.get('/', authenticate, authorizeRoles('hospital', 'admin'), async (req: AuthenticatedRequest, res) => {
   const donors = (await readJson<Donor>('donors'));
-  if (req.user!.role === 'admin') return res.json(donors);
-  res.json(donors.map(({ phone, coordinates, preciseLocation, ...publicProfile }) => publicProfile));
+  if (req.user!.role === 'admin') return res.json(donors.map(({ profilePhotoPath: _photoPath, ...donor }) => donor));
+  res.json(donors.map(({ phone, coordinates, preciseLocation, profilePhotoPath: _photoPath, ...publicProfile }) => publicProfile));
 });
 
 // GET /api/donors/me - Get current donor profile
@@ -81,7 +84,21 @@ router.get('/me', authenticate, async (req: AuthenticatedRequest, res) => {
   if (!donor) {
     return res.status(404).json({ error: 'Donor profile not found for current user' });
   }
-  res.json(donor);
+  const profilePhotoUrl = donor.profilePhotoPath ? await createCertificateSignedUrl(donor.profilePhotoPath) : null;
+  const { profilePhotoPath: _profilePhotoPath, ...publicProfile } = donor;
+  res.json({ ...publicProfile, profilePhotoUrl });
+});
+
+// Donors may update their dashboard profile photo.
+router.post('/me/photo', authenticate, async (req: AuthenticatedRequest, res) => {
+  const donor = await find<Donor>('donors', (entry) => entry.uid === req.user!.uid || entry.id === req.user!.donorId);
+  if (!donor) return res.status(404).json({ error: 'Donor profile not found' });
+  const image = parseCertificateImage(req.body?.fileName, req.body?.fileData);
+  if (!image) return certificateImageError(res);
+  const path = await storeCertificate(req.user!.uid, `profile_photo_${Date.now()}`, image);
+  const updated = await update<Donor>('donors', donor.id, { profilePhotoPath: path });
+  const profilePhotoUrl = await createCertificateSignedUrl(path);
+  res.json({ profilePhotoUrl, donor: updated ? { id: updated.id, fullName: updated.fullName } : null });
 });
 
 // GET /api/donors/:id - Get specific donor
@@ -89,7 +106,8 @@ router.get('/:id', authenticate, async (req: AuthenticatedRequest, res) => {
   const donor = (await find<Donor>('donors', (d) => d.id === req.params.id));
   if (!donor) return res.status(404).json({ error: 'Donor not found' });
   if (req.user!.role !== 'admin' && donor.uid !== req.user!.uid) return res.status(403).json({ error: 'Donor profiles are private' });
-  res.json(donor);
+  const { profilePhotoPath: _profilePhotoPath, ...safeDonor } = donor;
+  res.json(safeDonor);
 });
 
 // POST /api/donors - Register/Onboard donor with certificate
@@ -124,7 +142,16 @@ router.post('/', authenticate, async (req: AuthenticatedRequest, res) => {
     return res.status(400).json({ error: 'Enter a valid name, phone number, and blood group.' });
   }
 
+  if (coordinates && (typeof coordinates.latitude !== 'number' || typeof coordinates.longitude !== 'number'
+    || coordinates.latitude < -90 || coordinates.latitude > 90
+    || coordinates.longitude < -180 || coordinates.longitude > 180)) {
+    return res.status(400).json({ error: 'Provide a valid GPS location.' });
+  }
+
   const existingDonor = (await find<Donor>('donors', (donor) => donor.uid === req.user!.uid || donor.id === req.user!.donorId));
+  if (!existingDonor && !coordinates) {
+    return res.status(400).json({ error: 'Capture a valid GPS location before registering.' });
+  }
   const certificateImage = certificateFileBase64
     ? parseCertificateImage(certificateFileName, certificateFileBase64)
     : null;
@@ -193,6 +220,10 @@ router.post('/', authenticate, async (req: AuthenticatedRequest, res) => {
     }));
     (await update<User>('users', req.user!.uid, { donorId: existingDonor.id, role: 'donor', name: cleanName, phone: cleanPhone }));
     if (clinicalDetailsChanged) {
+      sendPendingReviewNotification({ name: cleanName, email: req.user?.email, role: 'donor' })
+        .catch((err) => console.warn('[ADMIN DONOR REVIEW NOTIFICATION ERROR]', err.message));
+    }
+    if (clinicalDetailsChanged) {
       for (const match of await filter<Match>('matches', (match) => match.donorId === existingDonor.id && ['pending_alert', 'alerted'].includes(match.status))) {
         await update<Match>('matches', match.id, { status: 'expired' });
       }
@@ -220,7 +251,7 @@ router.post('/', authenticate, async (req: AuthenticatedRequest, res) => {
       certificateFileName: savedCertFilename,
     },
     homeLocality: homeLocality || 'Udupi/Mangaluru',
-    coordinates: coordinates || { latitude: 13.35, longitude: 74.78 },
+    coordinates: coordinates!,
     locationSharingEnabled: false,
     preferredRadius: Number.isFinite(numericRadius) ? Math.max(5, Math.min(50, numericRadius)) : 15,
     availabilityStatus: 'available',
@@ -237,6 +268,9 @@ router.post('/', authenticate, async (req: AuthenticatedRequest, res) => {
   (await insert<Donor>('donors', newDonor));
   (await update<User>('users', req.user!.uid, { donorId: newDonor.id, role: 'donor', name: cleanName, phone: cleanPhone }));
 
+  sendPendingReviewNotification({ name: cleanName, email: req.user?.email, role: 'donor' })
+    .catch((err) => console.warn('[ADMIN DONOR REVIEW NOTIFICATION ERROR]', err.message));
+
   res.status(201).json(newDonor);
 });
 
@@ -249,6 +283,8 @@ router.post('/register', authenticate, async (req: AuthenticatedRequest, res) =>
     homeLocality,
     pincode,
     lastDonationDate,
+    coordinates,
+    donationIntervalDays,
     certificateFileName,
     certificateFileBase64,
   } = req.body;
@@ -260,12 +296,23 @@ router.post('/register', authenticate, async (req: AuthenticatedRequest, res) =>
     return res.status(400).json({ error: 'Choose a valid blood group.' });
   }
   const cleanBloodGroup = rawBloodGroup as BloodGroup;
+  const intervalDays = Number(donationIntervalDays) === 120 ? 120 : 90;
 
   if (!cleanName || !cleanPhone || !cleanBloodGroup) {
     return res.status(400).json({ error: 'Full name, phone, and blood group are required.' });
   }
   if (typeof pincode !== 'string' || !/^\d{6}$/.test(pincode.trim())) {
     return res.status(400).json({ error: 'PIN Code must contain exactly 6 digits.' });
+  }
+  if (!coordinates || typeof coordinates.latitude !== 'number' || typeof coordinates.longitude !== 'number'
+    || coordinates.latitude < -90 || coordinates.latitude > 90 || coordinates.longitude < -180 || coordinates.longitude > 180) {
+    return res.status(400).json({ error: 'Capture a valid home/base GPS location before registering.' });
+  }
+  const donationDate = typeof lastDonationDate === 'string' && lastDonationDate
+    ? new Date(`${lastDonationDate.slice(0, 10)}T00:00:00.000Z`)
+    : null;
+  if (lastDonationDate && (!donationDate || !Number.isFinite(donationDate.getTime()) || donationDate.getTime() > Date.now())) {
+    return res.status(400).json({ error: 'Last donation date must be a valid date in the past.' });
   }
 
   const existingDonor = (await find<Donor>('donors', (d) => d.uid === req.user!.uid));
@@ -297,7 +344,20 @@ router.post('/register', authenticate, async (req: AuthenticatedRequest, res) =>
       bloodGroup: cleanBloodGroup,
       rhType: cleanBloodGroup.includes('-') ? 'negative' : 'positive',
       homeLocality: homeLocality ? `${homeLocality} (${pincode || ''})`.trim() : existingDonor.homeLocality,
+      coordinates: {
+        latitude: Math.round(coordinates.latitude * 100000) / 100000,
+        longitude: Math.round(coordinates.longitude * 100000) / 100000,
+      },
       lastDonationDate: lastDonationDate || existingDonor.lastDonationDate,
+      donationIntervalDays: intervalDays,
+      ...(donationDate && donationDate.toISOString() !== existingDonor.lastDonationDate ? {
+        donationHistory: [...(existingDonor.donationHistory || []), {
+          id: `donation_${uuidv4().slice(0, 10)}`,
+          donatedAt: donationDate.toISOString(),
+          source: 'external' as const,
+          component: 'whole_blood' as const,
+        }],
+      } : {}),
       verification: {
         ...existingDonor.verification,
         certificateFileName: savedCertFilename || existingDonor.verification.certificateFileName,
@@ -328,6 +388,13 @@ router.post('/register', authenticate, async (req: AuthenticatedRequest, res) =>
     rhType: cleanBloodGroup.includes('-') ? 'negative' : 'positive',
     bloodComponentEligibility: ['whole_blood'],
     lastDonationDate: lastDonationDate || null,
+    donationIntervalDays: intervalDays,
+    donationHistory: donationDate ? [{
+      id: `donation_${uuidv4().slice(0, 10)}`,
+      donatedAt: donationDate.toISOString(),
+      source: 'external',
+      component: 'whole_blood',
+    }] : [],
     hemoglobinLevel: 14.0,
     weight: 65,
     eligibilityStatus: 'pending', // Awaiting Admin Review
@@ -342,7 +409,10 @@ router.post('/register', authenticate, async (req: AuthenticatedRequest, res) =>
       expiryDate: new Date(Date.now() + 365 * 24 * 3600 * 1000).toISOString(),
     },
     homeLocality: homeLocality ? `${homeLocality} (${pincode || ''})`.trim() : 'Udupi/Mangaluru',
-    coordinates: { latitude: 13.3524, longitude: 74.7927 },
+    coordinates: {
+      latitude: Math.round(coordinates.latitude * 100000) / 100000,
+      longitude: Math.round(coordinates.longitude * 100000) / 100000,
+    },
     locationSharingEnabled: false,
     preferredRadius: 15,
     availabilityStatus: 'available',
@@ -367,6 +437,8 @@ router.post('/register', authenticate, async (req: AuthenticatedRequest, res) =>
     role: 'donor',
     bloodGroup: cleanBloodGroup,
   }).catch((err) => console.warn('[DONOR REGISTRATION NOTIFICATION ERROR]', err.message));
+  sendPendingReviewNotification({ name: cleanName, email: req.user?.email, role: 'donor' })
+    .catch((err) => console.warn('[ADMIN DONOR REVIEW NOTIFICATION ERROR]', err.message));
 
   res.status(201).json({ donor: newDonor });
 });
@@ -561,6 +633,37 @@ router.put('/me/preferences', authenticate, async (req: AuthenticatedRequest, re
   res.json({ message: 'Donor preferences updated', donor: updated });
 });
 
+router.post('/me/donation-history', authenticate, async (req: AuthenticatedRequest, res) => {
+  const donor = await find<Donor>('donors', (entry) => entry.uid === req.user!.uid || entry.id === req.user!.donorId);
+  if (!donor) return res.status(404).json({ error: 'Donor profile not found' });
+  const donatedAtInput = typeof req.body?.donatedAt === 'string' ? req.body.donatedAt : '';
+  const donatedAtTime = Date.parse(`${donatedAtInput}T00:00:00.000Z`);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(donatedAtInput) || !Number.isFinite(donatedAtTime) || donatedAtTime > Date.now()) {
+    return res.status(400).json({ error: 'Choose a valid donation date that is not in the future.' });
+  }
+  const interval = Number(req.body?.donationIntervalDays);
+  if (interval !== 90 && interval !== 120) return res.status(400).json({ error: 'Choose a 90-day or 120-day whole blood interval.' });
+  const component = ['whole_blood', 'RBC', 'platelets', 'plasma'].includes(req.body?.component) ? req.body.component : 'whole_blood';
+  const entry = {
+    id: `donation_${uuidv4().slice(0, 10)}`,
+    donatedAt: new Date(donatedAtTime).toISOString(),
+    source: 'external' as const,
+    component,
+  };
+  const donationHistory = (donor.donationHistory || []).some((item) => item.donatedAt.slice(0, 10) === donatedAtInput && item.component === entry.component)
+    ? [...(donor.donationHistory || [])]
+    : [...(donor.donationHistory || []), entry];
+  donationHistory.sort((a, b) => Date.parse(a.donatedAt) - Date.parse(b.donatedAt));
+  const mostRecent = donationHistory.at(-1)!;
+  const updated = await update<Donor>('donors', donor.id, {
+    donationHistory,
+    lastDonationDate: mostRecent.donatedAt,
+    donationIntervalDays: interval,
+  });
+  if (updated) await expireStaleDonorAlerts(updated);
+  return res.status(201).json({ message: 'Donation date saved. The app will use it to estimate your next eligible date.', donor: updated });
+});
+
 // POST /api/donors/me/test-notifications - Dispatch a test alert across donor's active channels
 router.post('/me/test-notifications', authenticate, async (req: AuthenticatedRequest, res) => {
   const donor = (await find<Donor>('donors', (d) => d.uid === req.user!.uid || d.id === req.user!.donorId));
@@ -675,34 +778,27 @@ router.get('/me/history', authenticate, async (req: AuthenticatedRequest, res) =
     };
   });
 
-  const totalRecordedDonations = donor.heroStats?.totalDonations || 0;
   const historyList = [...realHistory];
-  const completedMatchCount = realHistory.filter((h) => h.matchStatus === 'donated').length;
-  const missingCount = Math.max(0, totalRecordedDonations - completedMatchCount);
 
-  if (missingCount > 0) {
-    const baseTime = Date.parse(donor.lastDonationDate || donor.heroStats?.lastResponseDate || '2026-10-07T09:00:00.000Z');
-    const hospitalName = donor.verification?.hospitalName || 'Kasturba Hospital, Manipal';
-    for (let i = 1; i <= missingCount; i++) {
-      const priorDate = new Date(baseTime - i * 90 * 24 * 3600 * 1000).toISOString();
-      historyList.push({
-        id: `hist_prior_${donor.id}_${i}`,
-        requestId: `req_archive_${100 + i}`,
-        matchStatus: 'donated',
-        response: 'accepted',
-        alertedAt: priorDate,
-        respondedAt: priorDate,
-        donationCompletedAt: priorDate,
-        bloodGroup: donor.bloodGroup,
-        component: i % 2 === 0 ? 'whole_blood' : 'RBC',
-        urgency: i % 3 === 0 ? 'critical' : 'urgent',
-        hospitalName,
-        hospitalDistrict: 'Udupi',
-        type: i % 2 === 0 ? 'Hospital Emergency Dispatch' : 'Certified Blood Bank Donation',
-        verifiedBy: donor.verification?.verifiedBy || 'Dr. Screening Officer',
-        certificateId: donor.verification?.certificateId,
-      });
-    }
+  for (const entry of donor.donationHistory || []) {
+    if (entry.source !== 'external') continue;
+    historyList.push({
+      id: entry.id,
+      requestId: entry.id,
+      matchStatus: 'donated',
+      response: 'accepted',
+      alertedAt: entry.donatedAt,
+      respondedAt: entry.donatedAt,
+      donationCompletedAt: entry.donatedAt,
+      bloodGroup: donor.bloodGroup,
+      component: entry.component,
+      urgency: 'standard',
+      hospitalName: 'Recorded outside RaktaRun',
+      hospitalDistrict: '',
+      type: 'Self-reported external donation',
+      selfReported: true,
+      verifiedBy: 'Donor update',
+    });
   }
 
   historyList.sort((a, b) => new Date(b.donationCompletedAt || b.alertedAt || 0).getTime() - new Date(a.donationCompletedAt || a.alertedAt || 0).getTime());

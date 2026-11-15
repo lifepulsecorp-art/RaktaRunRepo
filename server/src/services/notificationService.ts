@@ -343,6 +343,38 @@ export async function sendRegistrationNotification(data: {
   return { emailSent, smsSent };
 }
 
+export async function sendPendingReviewNotification(data: {
+  name: string;
+  email?: string;
+  role: 'donor' | 'hospital';
+  organizationName?: string;
+  facilityType?: 'hospital' | 'blood-bank';
+}): Promise<void> {
+  const adminEmails = (process.env.ADMIN_EMAIL || 'admin@raktarun.in')
+    .split(',').map((email) => email.trim()).filter(Boolean);
+  if (!adminEmails.length) return;
+
+  const safe = (value: string) => value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
+  const accountType = data.role === 'donor' ? 'Donor'
+    : data.facilityType === 'blood-bank' ? 'Blood bank authority' : 'Hospital authority';
+  const subject = `RaktaRun: ${accountType} registration waiting for review`;
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#172033;background:#fffdf8;border:1px solid #eadfce;border-radius:16px">
+      <p style="margin:0;color:#a51e32;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">RaktaRun verification queue</p>
+      <h1 style="font-size:22px;margin:12px 0">A registration needs review</h1>
+      <p><strong>Account type:</strong> ${accountType}</p>
+      <p><strong>Name:</strong> ${safe(data.name)}</p>
+      ${data.organizationName ? `<p><strong>Facility:</strong> ${safe(data.organizationName)}</p>` : ''}
+      <p><strong>Email:</strong> ${safe(data.email || 'Not provided')}</p>
+      <p>The application is saved with pending verification. Sign in to the RaktaRun admin dashboard to review it.</p>
+      <p style="margin-top:24px;color:#738093;font-size:12px">Automated notification from RaktaRun.</p>
+    </div>`;
+  const results = await Promise.all(adminEmails.map((email) => sendEmailAlert(email, 'RaktaRun Admin', subject, html)));
+  for (const result of results) {
+    if (!result.success) console.warn('[ADMIN REGISTRATION EMAIL NOT SENT]', result.error || result.recipient);
+  }
+}
+
 /**
  * Dispatches multi-channel notifications to a matched donor based on their preferences
  */

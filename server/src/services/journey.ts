@@ -1,4 +1,4 @@
-import type { BloodRequest, Coordinates, Donor, Match } from '../types.js';
+import type { BloodComponent, BloodRequest, Coordinates, Donor, Match } from '../types.js';
 import { distanceKm } from './matching.js';
 
 export function resolveDonorResponse(match: Match, request: BloodRequest, response: 'accepted' | 'declined', acceptedCount: number, now = Date.now()) {
@@ -29,7 +29,7 @@ export function updateJourney(match: Match, request: BloodRequest, location: Coo
   };
 }
 
-export function completeDonation(match: Match, donor: Donor, now = Date.now()) {
+export function completeDonation(match: Match, donor: Donor, component: BloodComponent = 'whole_blood', now = Date.now()) {
   const timestamp = new Date(now).toISOString();
   const badges = new Set(donor.heroStats.badges || []);
   const donations = (donor.heroStats.totalDonations || 0) + 1;
@@ -38,8 +38,13 @@ export function completeDonation(match: Match, donor: Donor, now = Date.now()) {
   if (donor.bloodGroup.endsWith('-')) badges.add('rare_blood_hero');
   if ((donor.heroStats.averageResponseTime || 9999) <= 600) badges.add('rapid_responder');
   if (donor.publicHeroConsent || donations >= 2) badges.add('community_champion');
+  const donation = { id: match.id, donatedAt: timestamp, source: 'raktarun' as const, component };
   return {
     matchPatch: { status: 'donated', donationCompletedAt: timestamp, donorCurrentLocation: null, etaSeconds: null, distanceRemaining: null } as Partial<Match>,
-    donorPatch: { heroStats: { ...donor.heroStats, totalEmergencyResponses: (donor.heroStats.totalEmergencyResponses || 0) + 1, totalDonations: donations, badges: [...badges], lastResponseDate: timestamp } } as Partial<Donor>,
+    donorPatch: {
+      lastDonationDate: timestamp,
+      donationHistory: [...(donor.donationHistory || []), donation],
+      heroStats: { ...donor.heroStats, totalEmergencyResponses: (donor.heroStats.totalEmergencyResponses || 0) + 1, totalDonations: donations, badges: [...badges], lastResponseDate: timestamp },
+    } as Partial<Donor>,
   };
 }

@@ -24,6 +24,7 @@ import {
   ArrowLeft,
   CheckCircle2,
   AlertCircle,
+  LocateFixed,
 } from 'lucide-react';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -110,8 +111,13 @@ export default function DonorRegisterPage() {
     homeLocality: '',
     pincode: '',
     lastDonationDate: '',
+    donationIntervalDays: 90,
+    latitude: null as number | null,
+    longitude: null as number | null,
     certificate: null as File | null,
   });
+  const [locating, setLocating] = useState(false);
+  const [locationNotice, setLocationNotice] = useState('');
 
   const navigate = useNavigate();
 
@@ -139,6 +145,26 @@ export default function DonorRegisterPage() {
   }, [error]);
 
   const update = (k: string, v: any) => setForm({ ...form, [k]: v });
+  const captureLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationNotice('This device does not support GPS location. Enable location services and try again.');
+      return;
+    }
+    setLocating(true);
+    setLocationNotice('');
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setForm((current) => ({ ...current, latitude: coords.latitude, longitude: coords.longitude }));
+        setLocationNotice('Home/base location captured.');
+        setLocating(false);
+      },
+      () => {
+        setLocationNotice('Could not access location. Allow location access in your browser and try again.');
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
+  };
   const selectedCallingCode = COUNTRY_CALLING_CODES.find((country) => country.region === phoneCountry)?.callingCode || '91';
   const maxNationalNumberLength = 15 - selectedCallingCode.length;
 
@@ -157,12 +183,17 @@ export default function DonorRegisterPage() {
       return;
     }
     setError('');
+
     update('certificate', file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (form.latitude == null || form.longitude == null) {
+      setError('Capture your home/base GPS location to receive nearby alerts.');
+      return;
+    }
 
     const emailValidationError = getEmailValidationMessage(form.email);
     if (emailValidationError) {
@@ -232,6 +263,8 @@ export default function DonorRegisterPage() {
       homeLocality: form.homeLocality.trim(),
       pincode: form.pincode.trim(),
       lastDonationDate: form.lastDonationDate || null,
+      donationIntervalDays: form.donationIntervalDays,
+      coordinates: { latitude: form.latitude, longitude: form.longitude },
       certificateFileName: form.certificate?.name || 'certificate.jpg',
       certificateFileBase64,
     });
@@ -467,16 +500,48 @@ export default function DonorRegisterPage() {
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
-                Last Donation Date (optional)
-              </label>
-              <input
-                type="date"
-                value={form.lastDonationDate}
-                onChange={(e) => update('lastDonationDate', e.target.value)}
-                className={inputClass}
-              />
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/60">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    <MapPin className="h-4 w-4 text-rose-600" /> Home / Base GPS Location
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    {form.latitude != null && form.longitude != null
+                      ? `${form.latitude.toFixed(5)}, ${form.longitude.toFixed(5)}`
+                      : 'Used to match you with nearby blood requests and camps.'}
+                  </p>
+                </div>
+                <button type="button" onClick={captureLocation} disabled={locating} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-rose-500/30 bg-white px-4 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-50 disabled:opacity-60 dark:bg-slate-900 dark:text-rose-300 dark:hover:bg-slate-800">
+                  <LocateFixed className="h-4 w-4" /> {locating ? 'Locating…' : form.latitude != null ? 'Update GPS location' : 'Use current location'}
+                </button>
+              </div>
+              {locationNotice && <p role="status" className="mt-2 text-xs text-rose-700 dark:text-rose-300">{locationNotice}</p>}
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
+                  Last Whole Blood Donation (optional)
+                </label>
+                <input
+                  type="date"
+                  max={new Date().toISOString().slice(0, 10)}
+                  value={form.lastDonationDate}
+                  onChange={(e) => update('lastDonationDate', e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
+                  Whole Blood Interval
+                </label>
+                <select value={form.donationIntervalDays} onChange={(e) => update('donationIntervalDays', Number(e.target.value))} className={inputClass}>
+                  <option value={90}>90 days</option>
+                  <option value={120}>120 days</option>
+                </select>
+                <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Use the interval advised by your blood bank.</p>
+              </div>
             </div>
 
             <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 p-4 space-y-2.5">

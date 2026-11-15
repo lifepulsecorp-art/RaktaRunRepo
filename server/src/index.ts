@@ -11,6 +11,7 @@ import heroRoutes from './routes/heroRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import requestRoutes from './routes/requestRoutes.js';
 import buddyRoutes from './routes/buddyRoutes.js';
+import bloodCampRoutes from './routes/bloodCampRoutes.js';
 import { escalateUnansweredRequests } from './services/escalation.js';
 
 const app = express();
@@ -76,6 +77,7 @@ app.use('/api/heroes', heroRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/buddies', buddyRoutes);
+app.use('/api/blood-camps', bloodCampRoutes);
 
 app.get('/api', (req, res) => {
   res.json({ message: 'RaktaRun API v1 — ready' });

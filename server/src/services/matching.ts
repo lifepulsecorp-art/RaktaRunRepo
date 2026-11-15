@@ -38,7 +38,10 @@ export function findCandidates(request: BloodRequest, donors: Donor[], excludedI
     const certificateExpiry = Date.parse(donor.verification?.expiryDate || '');
     if (!Number.isFinite(certificateExpiry) || certificateExpiry <= now) return [];
     if (donor.deferralUntil && Date.parse(donor.deferralUntil) > now) return [];
-    if (donor.lastDonationDate && (now - Date.parse(donor.lastDonationDate)) / 86400000 < minDays) return [];
+    const donorInterval = (request.component === 'whole_blood' || request.component === 'RBC')
+      ? donor.donationIntervalDays || 90
+      : minDays;
+    if (donor.lastDonationDate && (now - Date.parse(donor.lastDonationDate)) / 86400000 < donorInterval) return [];
     const distance = distanceKm(request.hospitalLocation, donor.coordinates);
     if (!Number.isFinite(distance) || distance > Math.min(request.radiusKm, donor.preferredRadius || request.radiusKm)) return [];
     return [{ donor, distance: Math.round(distance * 10) / 10, score: scoreDonor(donor, distance, true) }];

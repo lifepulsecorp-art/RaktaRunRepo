@@ -9,7 +9,7 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { PasswordInput } from '../../components/ui/PasswordInput';
 import EmailOtpVerification from '../../components/EmailOtpVerification';
-import { ArrowLeft, Building2, CheckCircle2, AlertCircle, Droplet } from 'lucide-react';
+import { ArrowLeft, Building2, CheckCircle2, AlertCircle, Droplet, MapPin, LocateFixed } from 'lucide-react';
 import { getEmailValidationMessage } from '../../utils/emailValidation';
 import { getPasswordPolicyError, PASSWORD_POLICY_MESSAGE } from '../../utils/passwordPolicy';
 import { PIN_CODE_ERROR_MESSAGE } from '../../utils/pinCode';
@@ -17,12 +17,6 @@ import { PIN_CODE_ERROR_MESSAGE } from '../../utils/pinCode';
 const inputClass = 'w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 transition shadow-sm';
 
 type FacilityType = 'hospital' | 'blood-bank';
-
-const locationPresets = {
-  Manipal: { latitude: 13.3524, longitude: 74.7927 },
-  Mangaluru: { latitude: 12.9141, longitude: 74.856 },
-  Udupi: { latitude: 13.3409, longitude: 74.7421 },
-} as const;
 
 export default function HospitalRegisterPage() {
   const { role, refreshProfile } = useAuth();
@@ -33,6 +27,8 @@ export default function HospitalRegisterPage() {
   const [done, setDone] = useState(false);
   const [otpStep, setOtpStep] = useState(false);
   const [facilityType, setFacilityType] = useState<FacilityType>('hospital');
+  const [locating, setLocating] = useState(false);
+  const [locationNotice, setLocationNotice] = useState('');
   const [form, setForm] = useState({
     email: '',
     password: '',
@@ -43,8 +39,8 @@ export default function HospitalRegisterPage() {
     pincode: '',
     contactName: '',
     contactPhone: '',
-    latitude: 13.3524,
-    longitude: 74.7927,
+    latitude: null as number | null,
+    longitude: null as number | null,
   });
   const navigate = useNavigate();
 
@@ -54,13 +50,34 @@ export default function HospitalRegisterPage() {
 
   const update = (k: string, v: any) => setForm({ ...form, [k]: v });
 
-  const setLocality = (locality: keyof typeof locationPresets) => {
-    setForm((f) => ({ ...f, ...locationPresets[locality], locality }));
+  const captureLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationNotice('This device does not support GPS location. Enable location services and try again.');
+      return;
+    }
+    setLocating(true);
+    setLocationNotice('');
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setForm((current) => ({ ...current, latitude: coords.latitude, longitude: coords.longitude }));
+        setLocationNotice('Facility location captured.');
+        setLocating(false);
+      },
+      () => {
+        setLocationNotice('Could not access location. Allow location access in your browser and try again.');
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (form.latitude == null || form.longitude == null) {
+      setError('Capture the facility location before continuing.');
+      return;
+    }
     const emailValidationError = getEmailValidationMessage(form.email);
     if (emailValidationError) {
       setEmailError(emailValidationError);
@@ -312,15 +329,13 @@ export default function HospitalRegisterPage() {
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
                   Locality / City
                 </label>
-                <select
+                <input
                   required
                   value={form.locality}
-                  onChange={(e) => setLocality(e.target.value as keyof typeof locationPresets)}
+                  onChange={(e) => update('locality', e.target.value)}
+                  placeholder="Your city or town"
                   className={inputClass}
-                >
-                  <option value="" disabled>Select city</option>
-                  {Object.keys(locationPresets).map((city) => <option key={city} value={city}>{city}</option>)}
-                </select>
+                />
               </div>
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
@@ -339,6 +354,25 @@ export default function HospitalRegisterPage() {
                   className={inputClass}
                 />
               </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/60">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    <MapPin className="h-4 w-4 text-rose-600" /> Facility GPS Location
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    {form.latitude != null && form.longitude != null
+                      ? `${form.latitude.toFixed(5)}, ${form.longitude.toFixed(5)}`
+                      : 'Capture the actual facility location for accurate nearby donor matching.'}
+                  </p>
+                </div>
+                <button type="button" onClick={captureLocation} disabled={locating} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-rose-500/30 bg-white px-4 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-50 disabled:opacity-60 dark:bg-slate-900 dark:text-rose-300 dark:hover:bg-slate-800">
+                  <LocateFixed className="h-4 w-4" /> {locating ? 'Locating…' : form.latitude != null ? 'Update GPS location' : 'Use current location'}
+                </button>
+              </div>
+              {locationNotice && <p role="status" className="mt-2 text-xs text-rose-700 dark:text-rose-300">{locationNotice}</p>}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

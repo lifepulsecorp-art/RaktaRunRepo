@@ -38,6 +38,12 @@ export async function downloadCertificate(objectPath: string): Promise<Buffer> {
   return Buffer.from(await data.arrayBuffer());
 }
 
+export async function createCertificateSignedUrl(objectPath: string, expiresInSeconds = 3600): Promise<string | null> {
+  const { data, error } = await getSupabase().storage.from(CERTIFICATES_BUCKET).createSignedUrl(objectPath, expiresInSeconds);
+  if (error || !data?.signedUrl) return null;
+  return data.signedUrl;
+}
+
 export async function deleteCertificate(objectPath: string): Promise<void> {
   const { error } = await getSupabase().storage.from(CERTIFICATES_BUCKET).remove([objectPath]);
   if (error) throw new Error(`Certificate delete failed: ${error.message}`);
