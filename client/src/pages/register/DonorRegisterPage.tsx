@@ -108,10 +108,10 @@ export default function DonorRegisterPage() {
     fullName: '',
     phone: '',
     bloodGroup: 'O+',
+    gender: '' as '' | 'male' | 'female',
     homeLocality: '',
     pincode: '',
     lastDonationDate: '',
-    donationIntervalDays: 90,
     latitude: null as number | null,
     longitude: null as number | null,
     certificate: null as File | null,
@@ -229,6 +229,10 @@ export default function DonorRegisterPage() {
       setError('Certificate images must be 3 MB or smaller.');
       return;
     }
+    if (!form.gender) {
+      setError('Choose Male or Female to calculate your whole blood refresh interval.');
+      return;
+    }
 
     try {
       setLoading(true);
@@ -260,10 +264,10 @@ export default function DonorRegisterPage() {
       fullName: form.fullName.trim(),
       phone: `+${selectedCallingCode}${form.phone.trim()}`,
       bloodGroup: form.bloodGroup.trim(),
+      gender: form.gender,
       homeLocality: form.homeLocality.trim(),
       pincode: form.pincode.trim(),
       lastDonationDate: form.lastDonationDate || null,
-      donationIntervalDays: form.donationIntervalDays,
       coordinates: { latitude: form.latitude, longitude: form.longitude },
       certificateFileName: form.certificate?.name || 'certificate.jpg',
       certificateFileBase64,
@@ -454,7 +458,7 @@ export default function DonorRegisterPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
                   Blood Group
@@ -468,6 +472,22 @@ export default function DonorRegisterPage() {
                     <option key={bg} value={bg}>{bg}</option>
                   ))}
                 </select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
+                  Male or Female
+                </label>
+                <select
+                  required
+                  value={form.gender}
+                  onChange={(e) => update('gender', e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="">Select</option>
+                  <option value="male">Male · 90-day interval</option>
+                  <option value="female">Female · 120-day interval</option>
+                </select>
+                <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Sets your estimated whole blood refresh interval.</p>
               </div>
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
@@ -532,15 +552,10 @@ export default function DonorRegisterPage() {
                   className={inputClass}
                 />
               </div>
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 block mb-1.5">
-                  Whole Blood Interval
-                </label>
-                <select value={form.donationIntervalDays} onChange={(e) => update('donationIntervalDays', Number(e.target.value))} className={inputClass}>
-                  <option value={90}>90 days</option>
-                  <option value={120}>120 days</option>
-                </select>
-                <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Use the interval advised by your blood bank.</p>
+              <div className="flex flex-col justify-center rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/60">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400">Whole blood refresh interval</span>
+                <span className="mt-1 text-sm font-bold text-slate-900 dark:text-white">{form.gender ? `${form.gender === 'female' ? 120 : 90} days · Based on ${form.gender === 'female' ? 'Female' : 'Male'} selection` : 'Select Male or Female above'}</span>
+                <span className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Your blood bank confirms when you are eligible to donate.</span>
               </div>
             </div>
 

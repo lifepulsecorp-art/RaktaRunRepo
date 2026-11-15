@@ -64,9 +64,10 @@ export const DonorDashboardPage: React.FC = () => {
   const [photoBusy, setPhotoBusy] = useState(false);
   const [photoNotice, setPhotoNotice] = useState('');
   const [externalDonationDate, setExternalDonationDate] = useState(String(roleData?.lastDonationDate || '').slice(0, 10));
-  const [donationIntervalDays, setDonationIntervalDays] = useState<number>(roleData?.donationIntervalDays || 90);
+  const [donationGender, setDonationGender] = useState<'male' | 'female' | ''>(roleData?.gender || '');
   const [donationBusy, setDonationBusy] = useState(false);
   const [donationNotice, setDonationNotice] = useState('');
+  const donationIntervalDays = donationGender === 'female' ? 120 : donationGender === 'male' ? 90 : roleData?.donationIntervalDays || 90;
 
   // Location picker modal state
   const [showLocationModal, setShowLocationModal] = useState(false);
@@ -107,8 +108,8 @@ export const DonorDashboardPage: React.FC = () => {
 
   useEffect(() => {
     setExternalDonationDate(String(roleData?.lastDonationDate || '').slice(0, 10));
-    setDonationIntervalDays(roleData?.donationIntervalDays || 90);
-  }, [roleData?.lastDonationDate, roleData?.donationIntervalDays]);
+    setDonationGender(roleData?.gender || '');
+  }, [roleData?.lastDonationDate, roleData?.gender]);
 
   const uploadProfilePhoto = async (file?: File) => {
     if (!file) return;
@@ -141,7 +142,7 @@ export const DonorDashboardPage: React.FC = () => {
     try {
       const { data } = await api.post('/donors/me/donation-history', {
         donatedAt: externalDonationDate,
-        donationIntervalDays,
+        gender: donationGender || undefined,
         component: 'whole_blood',
       });
       setDonationNotice(data.message || 'Donation date saved.');
@@ -149,6 +150,24 @@ export const DonorDashboardPage: React.FC = () => {
       if (showHistoryModal) await fetchHistory();
     } catch (error: any) {
       setDonationNotice(error.response?.data?.error || 'Could not save that donation date.');
+    } finally {
+      setDonationBusy(false);
+    }
+  };
+
+  const saveDonationGender = async () => {
+    if (!donationGender) {
+      setDonationNotice('Choose Male or Female to set your donation interval.');
+      return;
+    }
+    setDonationBusy(true);
+    setDonationNotice('');
+    try {
+      await api.put('/donors/me/preferences', { gender: donationGender });
+      await refreshProfile();
+      setDonationNotice(`Profile updated. Your estimated interval is ${donationIntervalDays} days.`);
+    } catch (error: any) {
+      setDonationNotice(error.response?.data?.error || 'Could not update your donation interval.');
     } finally {
       setDonationBusy(false);
     }
@@ -593,22 +612,25 @@ export const DonorDashboardPage: React.FC = () => {
               {roleData?.lastDonationDate && <p className="mt-2 text-xs font-semibold text-slate-700 dark:text-slate-200">Latest recorded donation: {new Date(roleData.lastDonationDate).toLocaleDateString('en-IN')}</p>}
               {donationNotice && <p role="status" className="mt-2 text-xs font-semibold text-amber-800 dark:text-amber-300">{donationNotice}</p>}
             </div>
-            <div className="grid gap-3 sm:grid-cols-[minmax(9rem,1fr)_minmax(12rem,1.2fr)_auto] lg:min-w-[38rem]">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(9rem,1fr)_minmax(10rem,1fr)_minmax(10rem,1fr)_auto_auto] lg:min-w-[58rem]">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Donation date
                 <input type="date" max={new Date().toISOString().slice(0, 10)} value={externalDonationDate} onChange={(event) => setExternalDonationDate(event.target.value)} className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white" />
               </label>
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Whole blood interval
-                <select value={donationIntervalDays} onChange={(event) => setDonationIntervalDays(Number(event.target.value))} className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
-                  <option value={90}>90 days</option>
-                  <option value={120}>120 days</option>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Male or Female
+                <select value={donationGender} onChange={(event) => setDonationGender(event.target.value as 'male' | 'female' | '')} className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+                  <option value="">Select</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
                 </select>
               </label>
-              <button type="button" disabled={donationBusy || !externalDonationDate} onClick={() => void saveExternalDonation()} className="self-end rounded-xl bg-amber-600 px-4 py-3 text-xs font-bold text-white transition hover:bg-amber-700 disabled:opacity-50 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400">{donationBusy ? 'Saving…' : 'Record donation'}</button>
+              <div className="flex flex-col justify-center rounded-xl border border-amber-200 bg-white/70 px-3 py-2.5 dark:border-amber-900/60 dark:bg-slate-900/60"><span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Whole blood refresh interval</span><span className="mt-1 text-sm font-bold text-slate-900 dark:text-white">{donationIntervalDays} days</span></div>
+              <button type="button" disabled={donationBusy || !donationGender} onClick={() => void saveDonationGender()} className="self-end rounded-xl border border-amber-300 bg-white px-3 py-3 text-xs font-bold text-amber-800 transition hover:bg-amber-100 disabled:opacity-50 dark:border-amber-800 dark:bg-slate-900 dark:text-amber-200 dark:hover:bg-slate-800">{donationBusy ? 'Saving…' : 'Save interval'}</button>
+              <button type="button" disabled={donationBusy || !externalDonationDate || !donationGender} onClick={() => void saveExternalDonation()} className="self-end rounded-xl bg-amber-600 px-4 py-3 text-xs font-bold text-white transition hover:bg-amber-700 disabled:opacity-50 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400">{donationBusy ? 'Saving…' : 'Record donation'}</button>
             </div>
           </div>
           {roleData?.lastDonationDate && (
             <p className="mt-4 border-t border-amber-200 pt-3 text-xs text-slate-600 dark:border-amber-900/60 dark:text-slate-300">
-              Estimated next eligible date: <strong className="text-slate-900 dark:text-white">{new Date(new Date(roleData.lastDonationDate).getTime() + (roleData.donationIntervalDays || donationIntervalDays) * 86400000).toLocaleDateString('en-IN')}</strong> · Based on a {roleData.donationIntervalDays || donationIntervalDays}-day interval.
+              Estimated next eligible date: <strong className="text-slate-900 dark:text-white">{new Date(new Date(roleData.lastDonationDate).getTime() + donationIntervalDays * 86400000).toLocaleDateString('en-IN')}</strong> · Based on the {donationGender || 'saved'} interval of {donationIntervalDays} days.
             </p>
           )}
         </section>

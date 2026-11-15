@@ -58,7 +58,7 @@ async function expireStaleDonorAlerts(donor: Donor) {
     const request = (await find<BloodRequest>('bloodRequests', (entry) => entry.id === match.requestId));
     const distance = request ? distanceKm(request.hospitalLocation, donor.coordinates) : Number.POSITIVE_INFINITY;
     const outsideRadius = !request || distance > Math.min(request.radiusKm, donor.preferredRadius || request.radiusKm);
-    const intervalDays = donor.donationIntervalDays || 90;
+    const intervalDays = donor.gender === 'female' ? 120 : donor.gender === 'male' ? 90 : donor.donationIntervalDays || 90;
     const insideDonationDeferral = Boolean(donor.lastDonationDate)
       && (Date.now() - Date.parse(donor.lastDonationDate || '')) / 86400000 < intervalDays;
     const criticalOnlyMismatch = Boolean(donor.notificationPreferences?.criticalOnly) && request?.urgency !== 'critical';
@@ -116,6 +116,7 @@ router.post('/', authenticate, async (req: AuthenticatedRequest, res) => {
     fullName,
     phone,
     bloodGroup,
+    gender,
     rhType,
     bloodComponentEligibility,
     hemoglobinLevel,
@@ -138,6 +139,9 @@ router.post('/', authenticate, async (req: AuthenticatedRequest, res) => {
   const cleanName = String(fullName).trim();
   const cleanPhone = String(phone).trim();
   const cleanBloodGroup = String(bloodGroup).trim();
+  const cleanGender = gender === 'male' || gender === 'female' ? gender : undefined;
+  if (gender != null && !cleanGender) return res.status(400).json({ error: 'Choose Male or Female.' });
+  const intervalDays = cleanGender === 'female' ? 120 : cleanGender === 'male' ? 90 : undefined;
   if (!cleanName || !cleanPhone || !VALID_BLOOD_GROUPS.includes(cleanBloodGroup as BloodGroup)) {
     return res.status(400).json({ error: 'Enter a valid name, phone number, and blood group.' });
   }
@@ -208,6 +212,7 @@ router.post('/', authenticate, async (req: AuthenticatedRequest, res) => {
       fullName: cleanName,
       phone: cleanPhone,
       bloodGroup: cleanBloodGroup as Donor['bloodGroup'],
+      ...(cleanGender ? { gender: cleanGender, donationIntervalDays: intervalDays } : {}),
       rhType: rhType || (cleanBloodGroup.endsWith('-') ? 'negative' : 'positive'),
       bloodComponentEligibility: cleanComponents as Donor['bloodComponentEligibility'],
       hemoglobinLevel: numericHemoglobin || 14,
@@ -240,6 +245,7 @@ router.post('/', authenticate, async (req: AuthenticatedRequest, res) => {
     phone: cleanPhone,
     aadhaarVerified: true,
     bloodGroup: cleanBloodGroup as Donor['bloodGroup'],
+    ...(cleanGender ? { gender: cleanGender, donationIntervalDays: intervalDays } : {}),
     rhType: rhType || 'positive',
     bloodComponentEligibility: cleanComponents as Donor['bloodComponentEligibility'],
     lastDonationDate: null,
@@ -280,11 +286,11 @@ router.post('/register', authenticate, async (req: AuthenticatedRequest, res) =>
     fullName,
     phone,
     bloodGroup,
+    gender,
     homeLocality,
     pincode,
     lastDonationDate,
     coordinates,
-    donationIntervalDays,
     certificateFileName,
     certificateFileBase64,
   } = req.body;
@@ -296,7 +302,11 @@ router.post('/register', authenticate, async (req: AuthenticatedRequest, res) =>
     return res.status(400).json({ error: 'Choose a valid blood group.' });
   }
   const cleanBloodGroup = rawBloodGroup as BloodGroup;
-  const intervalDays = Number(donationIntervalDays) === 120 ? 120 : 90;
+  if (gender !== 'male' && gender !== 'female') {
+    return res.status(400).json({ error: 'Choose Male or Female to set the donation interval.' });
+  }
+  const cleanGender = gender as 'male' | 'female';
+  const intervalDays = cleanGender === 'female' ? 120 : 90;
 
   if (!cleanName || !cleanPhone || !cleanBloodGroup) {
     return res.status(400).json({ error: 'Full name, phone, and blood group are required.' });
@@ -342,6 +352,7 @@ router.post('/register', authenticate, async (req: AuthenticatedRequest, res) =>
       fullName: cleanName,
       phone: cleanPhone,
       bloodGroup: cleanBloodGroup,
+      gender: cleanGender,
       rhType: cleanBloodGroup.includes('-') ? 'negative' : 'positive',
       homeLocality: homeLocality ? `${homeLocality} (${pincode || ''})`.trim() : existingDonor.homeLocality,
       coordinates: {
@@ -372,6 +383,8 @@ router.post('/register', authenticate, async (req: AuthenticatedRequest, res) =>
       for (const match of await filter<Match>('matches', (match) => match.donorId === existingDonor.id && ['pending_alert', 'alerted'].includes(match.status))) {
         await update<Match>('matches', match.id, { status: 'expired' });
       }
+    } else if (updated) {
+      await expireStaleDonorAlerts(updated);
     }
     return res.status(200).json({ donor: updated || existingDonor });
   }
@@ -385,6 +398,7 @@ router.post('/register', authenticate, async (req: AuthenticatedRequest, res) =>
     phone: cleanPhone,
     aadhaarVerified: true,
     bloodGroup: cleanBloodGroup,
+    gender: cleanGender,
     rhType: cleanBloodGroup.includes('-') ? 'negative' : 'positive',
     bloodComponentEligibility: ['whole_blood'],
     lastDonationDate: lastDonationDate || null,
@@ -608,8 +622,13 @@ router.get('/me/matches/:requestId', authenticate, async (req: AuthenticatedRequ
 router.put('/me/preferences', authenticate, async (req: AuthenticatedRequest, res) => {
   const donor = (await find<Donor>('donors', (d) => d.uid === req.user!.uid || d.id === req.user!.donorId));
   if (!donor) return res.status(404).json({ error: 'Donor profile not found' });
-  const { preferredRadius, notificationPreferences, homeLocality, coordinates } = req.body;
+  const { preferredRadius, notificationPreferences, homeLocality, coordinates, gender } = req.body;
   const patch: Partial<Donor> = {};
+  if (gender != null) {
+    if (gender !== 'male' && gender !== 'female') return res.status(400).json({ error: 'Choose Male or Female.' });
+    patch.gender = gender;
+    patch.donationIntervalDays = gender === 'female' ? 120 : 90;
+  }
   if (preferredRadius != null) patch.preferredRadius = Math.max(5, Math.min(50, Number(preferredRadius) || 15));
   if (homeLocality) patch.homeLocality = String(homeLocality).trim();
   if (coordinates && typeof coordinates.latitude === 'number' && typeof coordinates.longitude === 'number') {
@@ -641,8 +660,10 @@ router.post('/me/donation-history', authenticate, async (req: AuthenticatedReque
   if (!/^\d{4}-\d{2}-\d{2}$/.test(donatedAtInput) || !Number.isFinite(donatedAtTime) || donatedAtTime > Date.now()) {
     return res.status(400).json({ error: 'Choose a valid donation date that is not in the future.' });
   }
-  const interval = Number(req.body?.donationIntervalDays);
-  if (interval !== 90 && interval !== 120) return res.status(400).json({ error: 'Choose a 90-day or 120-day whole blood interval.' });
+  const requestedGender = req.body?.gender;
+  if (requestedGender != null && requestedGender !== 'male' && requestedGender !== 'female') return res.status(400).json({ error: 'Choose Male or Female.' });
+  const gender = requestedGender || donor.gender;
+  const interval = gender === 'female' ? 120 : gender === 'male' ? 90 : donor.donationIntervalDays || 90;
   const component = ['whole_blood', 'RBC', 'platelets', 'plasma'].includes(req.body?.component) ? req.body.component : 'whole_blood';
   const entry = {
     id: `donation_${uuidv4().slice(0, 10)}`,
@@ -659,6 +680,7 @@ router.post('/me/donation-history', authenticate, async (req: AuthenticatedReque
     donationHistory,
     lastDonationDate: mostRecent.donatedAt,
     donationIntervalDays: interval,
+    ...(gender ? { gender } : {}),
   });
   if (updated) await expireStaleDonorAlerts(updated);
   return res.status(201).json({ message: 'Donation date saved. The app will use it to estimate your next eligible date.', donor: updated });

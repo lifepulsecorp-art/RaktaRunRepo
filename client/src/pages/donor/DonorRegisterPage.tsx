@@ -38,6 +38,7 @@ export const DonorRegisterPage: React.FC = () => {
   const [fullName, setFullName] = useState(roleData?.fullName || profile?.name || '');
   const [phone, setPhone] = useState(roleData?.phone || '+91');
   const [bloodGroup, setBloodGroup] = useState<'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-'>(roleData?.bloodGroup || 'O+');
+  const [gender, setGender] = useState<'male' | 'female' | ''>(roleData?.gender || '');
   const [components, setComponents] = useState<string[]>(roleData?.bloodComponentEligibility || ['whole_blood', 'RBC']);
   const [hemoglobinLevel, setHemoglobinLevel] = useState<number>(roleData?.hemoglobinLevel || 14.0);
   const [weight, setWeight] = useState<number>(roleData?.weight || 68);
@@ -56,6 +57,7 @@ export const DonorRegisterPage: React.FC = () => {
       if (roleData.fullName) setFullName(roleData.fullName);
       if (roleData.phone) setPhone(roleData.phone);
       if (roleData.bloodGroup) setBloodGroup(roleData.bloodGroup);
+      if (roleData.gender) setGender(roleData.gender);
       if (roleData.bloodComponentEligibility?.length) setComponents(roleData.bloodComponentEligibility);
       if (roleData.hemoglobinLevel) setHemoglobinLevel(roleData.hemoglobinLevel);
       if (roleData.weight) setWeight(roleData.weight);
@@ -110,6 +112,10 @@ export const DonorRegisterPage: React.FC = () => {
       setErrorMessage('Please upload your hospital screening certificate as a JPG, PNG, or WEBP image.');
       return;
     }
+    if (!gender) {
+      setErrorMessage('Choose Male or Female to calculate your whole blood refresh interval.');
+      return;
+    }
     if (certificateFileBase64 && !/\.(jpe?g|png|webp)$/i.test(certificateFileName)) {
       setErrorMessage('Upload a certificate image in JPG, PNG, or WEBP format. PDF files are not accepted.');
       return;
@@ -124,6 +130,7 @@ export const DonorRegisterPage: React.FC = () => {
         fullName,
         phone,
         bloodGroup,
+        gender,
         rhType,
         bloodComponentEligibility: components,
         hemoglobinLevel: Number(hemoglobinLevel),
@@ -260,7 +267,7 @@ export const DonorRegisterPage: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-5 space-y-5">
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     Blood Group *
@@ -279,6 +286,18 @@ export const DonorRegisterPage: React.FC = () => {
                     <option value="AB+">AB Positive (AB+)</option>
                     <option value="AB-">AB Negative (AB-)</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Male or Female *
+                  </label>
+                  <select required value={gender} onChange={(e) => setGender(e.target.value as 'male' | 'female' | '')} className="mt-2 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 py-2.5 px-4 text-sm text-slate-900 dark:text-white focus:border-rose-500 focus:outline-none transition">
+                    <option value="">Select</option>
+                    <option value="male">Male · 90 days</option>
+                    <option value="female">Female · 120 days</option>
+                  </select>
+                  <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Sets your estimated whole blood refresh interval.</p>
                 </div>
 
                 <div>

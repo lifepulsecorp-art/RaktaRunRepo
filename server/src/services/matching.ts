@@ -39,7 +39,7 @@ export function findCandidates(request: BloodRequest, donors: Donor[], excludedI
     if (!Number.isFinite(certificateExpiry) || certificateExpiry <= now) return [];
     if (donor.deferralUntil && Date.parse(donor.deferralUntil) > now) return [];
     const donorInterval = (request.component === 'whole_blood' || request.component === 'RBC')
-      ? donor.donationIntervalDays || 90
+      ? (donor.gender === 'female' ? 120 : donor.gender === 'male' ? 90 : donor.donationIntervalDays || 90)
       : minDays;
     if (donor.lastDonationDate && (now - Date.parse(donor.lastDonationDate)) / 86400000 < donorInterval) return [];
     const distance = distanceKm(request.hospitalLocation, donor.coordinates);

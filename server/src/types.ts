@@ -144,6 +144,7 @@ export interface Donor {
   email?: string;
   aadhaarVerified: boolean;
   bloodGroup: BloodGroup;
+  gender?: 'male' | 'female';
   rhType: 'positive' | 'negative';
   bloodComponentEligibility: BloodComponent[];
   lastDonationDate: string | null;
