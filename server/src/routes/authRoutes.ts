@@ -221,6 +221,11 @@ router.post('/register', async (req, res) => {
     if (res.headersSent || !(req as AuthenticatedRequest).user) return;
     const user = (req as AuthenticatedRequest).user!;
     const { role, displayName } = req.body;
+    if (role && role !== user.role) {
+      return res.status(409).json({
+        error: `This account is registered as ${user.role}. Sign out and use a different email to register as ${role}.`,
+      });
+    }
     const patch: Partial<User> = {};
     if (displayName) patch.name = displayName;
     if (role && ['donor', 'hospital'].includes(role) && user.role !== 'admin') patch.role = role;
@@ -353,7 +358,18 @@ router.post('/verify-otp', async (req, res) => {
     createdAt: timestamp,
     updatedAt: timestamp,
   };
-  (await insert<User>('users', user));
+  try {
+    await insert<User>('users', user);
+  } catch (error) {
+    // The database email constraint is the final guard when two registrations
+    // pass the preflight lookup at the same time.
+    const existingAccount = await find<User>('users', (entry) => entry.email.trim().toLowerCase() === email);
+    if (existingAccount) {
+      await remove<EmailVerificationChallenge>('emailVerifications', challenge.id);
+      return res.status(409).json({ error: 'An account already exists for this email. Sign in instead.' });
+    }
+    throw error;
+  }
   (await remove<EmailVerificationChallenge>('emailVerifications', challenge.id));
   const token = issueToken(user);
   return res.json({ message: 'Email verified.', token, user: publicUser(user) });

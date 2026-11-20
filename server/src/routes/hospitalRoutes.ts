@@ -93,6 +93,9 @@ router.post('/', authenticate, async (req: AuthenticatedRequest, res) => {
 
 // POST /api/hospitals/register - Self-service registration from public onboarding
 router.post('/register', authenticate, async (req: AuthenticatedRequest, res) => {
+  if (req.user!.role !== 'hospital') {
+    return res.status(403).json({ error: 'Only hospital accounts can submit hospital registration details.' });
+  }
   const {
     name,
     facilityType,

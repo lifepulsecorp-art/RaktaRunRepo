@@ -112,6 +112,9 @@ router.get('/:id', authenticate, async (req: AuthenticatedRequest, res) => {
 
 // POST /api/donors - Register/Onboard donor with certificate
 router.post('/', authenticate, async (req: AuthenticatedRequest, res) => {
+  if (req.user!.role !== 'donor') {
+    return res.status(403).json({ error: 'Only donor accounts can manage a donor profile.' });
+  }
   const {
     fullName,
     phone,
@@ -282,6 +285,9 @@ router.post('/', authenticate, async (req: AuthenticatedRequest, res) => {
 
 // POST /api/donors/register - Self-service registration from public onboarding
 router.post('/register', authenticate, async (req: AuthenticatedRequest, res) => {
+  if (req.user!.role !== 'donor') {
+    return res.status(403).json({ error: 'Only donor accounts can submit donor registration details.' });
+  }
   const {
     fullName,
     phone,

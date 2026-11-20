@@ -38,8 +38,10 @@ export const LoginPage: React.FC = () => {
         navigate('/admin', { replace: true });
       } else if (targetRole === 'hospital') {
         navigate('/hospital', { replace: true });
-      } else {
+      } else if (targetRole === 'donor') {
         navigate('/donor', { replace: true });
+      } else {
+        navigate('/unauthorized', { replace: true });
       }
     } catch (err: any) {
       console.error('Login error:', err);
