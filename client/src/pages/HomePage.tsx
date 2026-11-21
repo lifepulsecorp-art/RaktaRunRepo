@@ -275,28 +275,18 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900/70 sm:p-12">
-          <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-rose-500/10 blur-3xl" />
-          <div className="relative grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-[0.18em] text-rose-600 dark:text-rose-400">About RaktaRun</span>
-              <h2 className="mt-3 text-3xl font-black text-slate-900 dark:text-white sm:text-4xl">Built by students. Here for every neighbor.</h2>
-              <p className="mt-4 max-w-xl text-sm leading-6 text-slate-600 dark:text-slate-300">
-                RaktaRun is an emergency blood donor network created by four NMAMIT students to help hospitals and nearby donors find each other faster across coastal Karnataka.
-              </p>
-              <Link to="/about" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:bg-rose-700 dark:bg-white dark:text-slate-900 dark:hover:bg-rose-100">
-                Meet the founding team <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {['Maneesh Bailady', 'Pratheek S Shetty', 'Sudeep Shetty', 'Banish Devadiga'].map((name, index) => (
-                <div key={name} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/70">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-600/10 text-sm font-black text-rose-700 dark:text-rose-300">0{index + 1}</span>
-                  <p className="mt-3 text-sm font-bold text-slate-900 dark:text-white">{name}</p>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Co-founder · NMAMIT</p>
-                </div>
-              ))}
-            </div>
+        <section className="founders-teaser relative isolate overflow-hidden rounded-[2rem] border border-white/70 px-6 py-10 text-center shadow-xl dark:border-white/10 sm:px-12 sm:py-14">
+          <div className="founders-teaser-orb pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-rose-400/25 blur-3xl" />
+          <div className="founders-teaser-orb founders-teaser-orb-delay pointer-events-none absolute -bottom-28 -left-12 h-64 w-64 rounded-full bg-amber-300/25 blur-3xl" />
+          <div className="relative mx-auto max-w-xl">
+            <span className="text-xs font-bold uppercase tracking-[0.18em] text-rose-600 dark:text-rose-300">The people behind RaktaRun</span>
+            <h2 className="mt-3 text-3xl font-black text-slate-900 dark:text-white sm:text-4xl">Meet the founding team</h2>
+            <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-600 dark:text-slate-300">
+              Get to know the four NMAMIT students building a stronger donor network for coastal Karnataka.
+            </p>
+            <Link to="/about" className="founders-glass-button founders-cta mt-7 inline-flex items-center gap-2 rounded-2xl px-6 py-4 text-sm font-bold text-slate-900 transition dark:text-white">
+              <Users className="h-4 w-4" /> Meet our co-founders <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </section>
 

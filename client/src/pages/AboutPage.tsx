@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, HeartPulse, MapPin, ShieldCheck, Users } from 'lucide-react';
+import { ArrowLeft, ArrowRight, HeartPulse, MapPin, ShieldCheck, Users } from 'lucide-react';
 import { AppLayout } from '../components/AppLayout';
 
 const founders = [
@@ -10,6 +11,13 @@ const founders = [
 ];
 
 export default function AboutPage() {
+  const [activeFounder, setActiveFounder] = useState(0);
+  useEffect(() => {
+    const timer = window.setInterval(() => setActiveFounder((current) => (current + 1) % founders.length), 5000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const founder = founders[activeFounder];
+
   return (
     <AppLayout withSidebar={false}>
       <div className="mx-auto max-w-6xl space-y-10 py-4 sm:py-8">
@@ -39,20 +47,28 @@ export default function AboutPage() {
           ))}
         </section>
 
-        <section>
-          <div className="mb-5 max-w-2xl">
+        <section className="founder-carousel relative overflow-hidden rounded-[2rem] border border-white/70 p-6 shadow-xl sm:p-10 dark:border-white/10">
+          <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-rose-400/20 blur-3xl" />
+          <div className="relative mb-5 max-w-2xl">
             <span className="text-xs font-bold uppercase tracking-[0.18em] text-rose-600 dark:text-rose-400">The founding team</span>
             <h2 className="mt-2 text-3xl font-black text-slate-900 dark:text-white">Four co-founders from NMAMIT</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">RaktaRun began as a student effort to make local blood coordination more direct and accessible.</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">Meet the student team behind a more connected local blood donor network.</p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {founders.map((founder) => (
-              <article key={founder.name} className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-rose-300 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/70 dark:hover:border-rose-500/50">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-600 text-sm font-black text-white shadow-lg shadow-rose-950/15">{founder.number}</div>
-                <h3 className="mt-5 text-lg font-bold text-slate-900 dark:text-white">{founder.name}</h3>
-                <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Co-founder · NMAMIT</p>
-              </article>
-            ))}
+          <div className="relative grid gap-6 sm:grid-cols-[0.8fr_1.2fr] sm:items-center">
+            <div className="founder-portrait mx-auto flex aspect-square w-full max-w-[17rem] items-center justify-center rounded-[2rem] text-6xl font-black text-rose-700 dark:text-rose-200" aria-hidden="true">{founder.name.split(' ').map((part) => part[0]).slice(0, 2).join('')}</div>
+            <div key={founder.name} className="founder-slide py-4 sm:py-8" aria-live="polite" aria-atomic="true">
+              <span className="text-xs font-black tracking-[0.2em] text-rose-600 dark:text-rose-400">CO-FOUNDER {founder.number} / 04</span>
+              <h3 className="mt-3 text-3xl font-black text-slate-900 dark:text-white sm:text-4xl">{founder.name}</h3>
+              <p className="mt-2 text-sm font-semibold text-slate-500 dark:text-slate-400">NMAMIT · Founding team</p>
+              <p className="mt-5 max-w-lg text-base leading-7 text-slate-700 dark:text-slate-300">Part of the student team building RaktaRun to help connect nearby donors with hospitals across coastal Karnataka.</p>
+              <div className="mt-7 flex items-center gap-4">
+                <button type="button" aria-label="Previous co-founder" onClick={() => setActiveFounder((activeFounder + founders.length - 1) % founders.length)} className="founder-control"><ArrowLeft className="h-4 w-4" /></button>
+                <button type="button" aria-label="Next co-founder" onClick={() => setActiveFounder((activeFounder + 1) % founders.length)} className="founder-control"><ArrowRight className="h-4 w-4" /></button>
+                <div className="ml-1 flex gap-2" aria-label={`Co-founder ${activeFounder + 1} of ${founders.length}`}>
+                  {founders.map((person, index) => <button key={person.name} type="button" aria-label={`Show ${person.name}`} aria-current={index === activeFounder ? 'true' : undefined} onClick={() => setActiveFounder(index)} className={`founder-dot ${index === activeFounder ? 'is-active' : ''}`} />)}
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 

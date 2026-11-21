@@ -158,17 +158,45 @@ button, a { -webkit-tap-highlight-color: transparent; }
 @keyframes heart-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 .animate-heart-pulse { animation: heart-pulse 2s infinite ease-in-out; }
 
-.startup-logo-runner { animation: startup-run 1.8s ease-in-out infinite; }
-.startup-progress { animation: startup-progress 1.6s ease-in-out infinite; }
-@keyframes startup-run {
-  0%, 100% { transform: translateX(-14px) rotate(-1deg); }
-  50% { transform: translateX(14px) rotate(1deg); }
+.startup-logo-glow img { animation: logo-edge-glow 2.2s ease-in-out infinite; }
+@keyframes logo-edge-glow {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(202, 96, 38, 0.24)); }
+  50% { filter: drop-shadow(0 0 24px rgba(232, 165, 27, 0.72)) drop-shadow(0 0 42px rgba(202, 96, 38, 0.32)); }
 }
-@keyframes startup-progress {
-  0% { width: 10%; transform: translateX(0); }
-  50% { width: 80%; transform: translateX(25%); }
-  100% { width: 10%; transform: translateX(900%); }
+
+.founders-glass-button, .founder-control {
+  border: 1px solid rgba(255,255,255,.72);
+  background: linear-gradient(145deg, rgba(255,255,255,.78), rgba(255,250,245,.42));
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+  backdrop-filter: blur(18px) saturate(145%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.85), 0 12px 30px -18px rgba(95,43,37,.5);
 }
+.founders-glass-button:hover, .founder-control:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 14px 32px -16px rgba(202,96,38,.42); }
+.founders-teaser { background: linear-gradient(135deg, rgba(255,255,255,.78), rgba(255,246,226,.68)); -webkit-backdrop-filter: blur(20px) saturate(145%); backdrop-filter: blur(20px) saturate(145%); }
+.dark .founders-teaser { background: linear-gradient(135deg, rgba(36,55,45,.88), rgba(25,37,31,.78)); }
+.founders-cta { position: relative; animation: founders-cta-float 3.2s ease-in-out infinite; }
+.founders-cta::after { position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,.48) 48%, transparent 76%); content: ''; transform: translateX(-130%); animation: founders-cta-shine 5s ease-in-out infinite; }
+.founders-teaser-orb { animation: teaser-orb-drift 8s ease-in-out infinite alternate; }
+.founders-teaser-orb-delay { animation-delay: -4s; }
+@keyframes founders-cta-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes founders-cta-shine { 0%, 68%, 100% { transform: translateX(-130%); } 84% { transform: translateX(130%); } }
+@keyframes teaser-orb-drift { from { transform: translate3d(-8px, 4px, 0) scale(.92); } to { transform: translate3d(16px, -12px, 0) scale(1.08); } }
+.dark .founders-glass-button, .dark .founder-control {
+  border-color: rgba(255,255,255,.14);
+  background: linear-gradient(145deg, rgba(45,55,49,.78), rgba(24,37,31,.58));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.13), 0 12px 30px -18px rgba(0,0,0,.8);
+}
+.founder-carousel { background: linear-gradient(135deg, rgba(255,255,255,.88), rgba(255,248,235,.66)); backdrop-filter: blur(20px); }
+.dark .founder-carousel { background: linear-gradient(135deg, rgba(36,55,45,.92), rgba(25,37,31,.82)); }
+.founder-portrait { background: radial-gradient(circle at 32% 26%, rgba(255,255,255,.96), rgba(255,228,207,.7) 40%, rgba(232,165,27,.22)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.82), 0 24px 60px -34px rgba(202,96,38,.55); }
+.dark .founder-portrait { background: radial-gradient(circle at 32% 26%, rgba(248,173,114,.36), rgba(36,55,45,.88) 46%, rgba(16,41,31,.9)); }
+.founder-slide { animation: founder-fade-in .48s ease both; }
+.founder-control { display: inline-flex; height: 2.75rem; width: 2.75rem; align-items: center; justify-content: center; border-radius: 9999px; color: var(--ink); transition: transform .2s ease, box-shadow .2s ease; }
+.founder-control:hover { transform: translateY(-2px); }
+.founder-dot { height: .55rem; width: .55rem; border-radius: 9999px; background: rgba(129,118,99,.4); transition: all .25s ease; }
+.founder-dot.is-active { width: 1.5rem; background: #ca6026; }
+.dark .founder-dot.is-active { background: #ed8a48; }
+@keyframes founder-fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }

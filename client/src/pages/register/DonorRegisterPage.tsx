@@ -250,7 +250,9 @@ export default function DonorRegisterPage() {
       if (err.response?.status === 409 && message.toLowerCase().includes('verification is already pending')) {
         setStep(2);
       } else {
-        setError(message);
+        setError(err.response?.status === 409 && message.toLowerCase().includes('already')
+          ? 'This email is already registered. Sign in with that account or use a different email.'
+          : message);
       }
     } finally {
       setLoading(false);
